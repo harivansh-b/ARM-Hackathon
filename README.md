@@ -22,6 +22,7 @@ python -m unittest discover -s tests -v
 python -m guardian_models.cli --kind sms --text "Your account is suspended. Verify now at https://example.test"
 python -m guardian_models.cli --kind url --url "https://paypa1-login.example.test/verify"
 python -m guardian_models.train_sms data/sms.example.jsonl artifacts/sms-baseline.json --holdout-campaign travel-2
+python -m guardian_models.train_sms data/public_sms.jsonl artifacts/public-sms-baseline.json --holdout-fraction 0.2 --max-records 12000 --epochs 3
 ```
 
 ## Integration contract

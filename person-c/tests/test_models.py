@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parents[1]))
 
 from guardian_models.detectors import analyze_sms, analyze_url
-from guardian_models.dataset import SMSExample, campaign_split
+from guardian_models.dataset import SMSExample, campaign_split, deterministic_campaign_split
 from guardian_models.metrics import binary_metrics, pr_auc
 from guardian_models.normalize import extract_urls, normalize_text, normalize_url
 from guardian_models.sms_model import LinearSMSModel
@@ -50,6 +50,13 @@ class TrainingTests(unittest.TestCase):
         train, test = campaign_split(examples, {"b"})
         self.assertEqual({item.campaign for item in train}, {"a"})
         self.assertEqual({item.campaign for item in test}, {"b"})
+
+    def test_deterministic_split_keeps_both_labels_and_groups_intact(self):
+        examples = [SMSExample("bad a", 1, "a"), SMSExample("good b", 0, "b"), SMSExample("bad c", 1, "c"), SMSExample("good d", 0, "d")]
+        train, test = deterministic_campaign_split(examples, 0.5)
+        self.assertEqual({item.label for item in train}, {0, 1})
+        self.assertEqual({item.label for item in test}, {0, 1})
+        self.assertTrue({item.campaign for item in train}.isdisjoint({item.campaign for item in test}))
 
     def test_linear_model_learns_and_explains_fixture(self):
         model = LinearSMSModel(epochs=30).fit([

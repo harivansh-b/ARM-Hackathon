@@ -1,0 +1,25 @@
+{
+  "collected_at": "2026-11-09T13:47:18.805Z",
+  "collection_method": "Playwright browser extraction from publicly accessible pages",
+  "sources": [
+    {
+      "name": "SMS Phishing Dataset",
+      "url": "https://raw.githubusercontent.com/wspr-ncsu/sms-phishing/main/phishing_messages.csv",
+      "repository": "https://github.com/wspr-ncsu/sms-phishing",
+      "license_note": "Repository displays MIT license; cite Nahapetyan et al., IEEE S&P 2024."
+    },
+    {
+      "name": "SMS Spam Collection v1",
+      "url": "https://raw.githubusercontent.com/nitish-niraj/sms-spam/main/data/raw/sms%2Bspam%2Bcollection/SMSSpamCollection",
+      "repository": "https://github.com/nitish-niraj/sms-spam",
+      "license_note": "Corpus readme requests attribution to Almeida, Gómez Hidalgo and Yamakami and states free use with disclaimer."
+    }
+  ],
+  "records": 34100,
+  "positives": 29273,
+  "negatives": 4827,
+  "redactions": [
+    "phone numbers",
+    "email addresses"
+  ]
+}
