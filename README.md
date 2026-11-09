@@ -1,24 +1,27 @@
 # Guardian Person C Models
 
-This module is the dependency-light starting point for the Models and Llama workstream.
+This repository contains the Guardian architecture documents and the dependency-light starting point for the Person C Models and Llama workstream.
 
 It currently provides:
 
 - Unicode and URL normalization shared by SMS and URL detectors.
 - Explainable rule-based SMS and URL baselines.
 - A stable evidence-record contract for Core integration.
-- Unit tests for normalization, detection, and safety boundaries.
+- A campaign-safe JSONL dataset loader and evaluation split.
+- A standard-library hashed linear SMS model with explainable features.
+- Unit tests for normalization, detection, model training and safety boundaries.
 
 The rules are a baseline, not a trained production model. Real datasets, held-out splits, calibration, and ExecuTorch export must be added after the team supplies data and confirms the target phone.
 
 ## Run
 
-From this directory:
+From `person-c`:
 
 ```text
 python -m unittest discover -s tests -v
 python -m guardian_models.cli --kind sms --text "Your account is suspended. Verify now at https://example.test"
 python -m guardian_models.cli --kind url --url "https://paypa1-login.example.test/verify"
+python -m guardian_models.train_sms data/sms.example.jsonl artifacts/sms-baseline.json --holdout-campaign travel-2
 ```
 
 ## Integration contract
@@ -28,3 +31,5 @@ python -m guardian_models.cli --kind url --url "https://paypa1-login.example.tes
 `evidence_id`, `source`, `event_type`, `timestamp`, `entity`, `risk_tier`, `score`, `reasons`, and `related_ids`.
 
 Scores are ranked baseline scores, not calibrated probabilities.
+
+The example dataset is only a smoke fixture. It is not a research dataset and must not be presented as a quality result. Real evaluation requires licensed, campaign-separated data and a newer held-out split.

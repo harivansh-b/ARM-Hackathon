@@ -6,7 +6,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parents[1]))
 
 from guardian_models.detectors import analyze_sms, analyze_url
+from guardian_models.dataset import SMSExample, campaign_split
+from guardian_models.metrics import binary_metrics, pr_auc
 from guardian_models.normalize import extract_urls, normalize_text, normalize_url
+from guardian_models.sms_model import LinearSMSModel
 
 
 class NormalizationTests(unittest.TestCase):
@@ -39,6 +42,31 @@ class DetectorTests(unittest.TestCase):
         result = analyze_sms("Your delivery is ready")
         self.assertNotIn("llama", result)
         self.assertIn("risk_tier", result)
+
+
+class TrainingTests(unittest.TestCase):
+    def test_campaign_split_keeps_campaigns_disjoint(self):
+        examples = [SMSExample("bad", 1, "a"), SMSExample("good", 0, "b"), SMSExample("bad two", 1, "a")]
+        train, test = campaign_split(examples, {"b"})
+        self.assertEqual({item.campaign for item in train}, {"a"})
+        self.assertEqual({item.campaign for item in test}, {"b"})
+
+    def test_linear_model_learns_and_explains_fixture(self):
+        model = LinearSMSModel(epochs=30).fit([
+            ("urgent verify otp", 1),
+            ("claim prize pay fee", 1),
+            ("delivery arrives tomorrow", 0),
+            ("booking confirmed tomorrow", 0),
+        ])
+        self.assertGreater(model.predict_proba("urgent verify otp"), model.predict_proba("delivery arrives tomorrow"))
+        self.assertTrue(model.explain("urgent verify otp"))
+        self.assertEqual(LinearSMSModel.from_dict(model.to_dict()).predict_proba("urgent verify otp"), model.predict_proba("urgent verify otp"))
+
+    def test_metrics_include_false_positive_rate_and_pr_auc(self):
+        report = binary_metrics([1, 1, 0, 0], [0.9, 0.8, 0.2, 0.1])
+        self.assertEqual(report["false_positive_rate"], 0.0)
+        self.assertEqual(report["f1"], 1.0)
+        self.assertEqual(pr_auc([1, 1, 0, 0], [0.9, 0.8, 0.2, 0.1]), 1.0)
 
 
 if __name__ == "__main__":
