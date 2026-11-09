@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from .dataset import campaign_split, deterministic_campaign_split, load_jsonl
+from .calibration import select_threshold
 from .metrics import binary_metrics, pr_auc
 from .sms_model import LinearSMSModel
 
@@ -32,22 +33,27 @@ def main() -> None:
         negative_limit = min(len(negatives), args.max_records - positive_limit)
         examples = positives[:positive_limit] + negatives[:negative_limit]
     if args.holdout_campaign:
-        train, test = campaign_split(examples, set(args.holdout_campaign))
+        train_pool, test = campaign_split(examples, set(args.holdout_campaign))
         test_campaigns = sorted(set(args.holdout_campaign))
     else:
-        train, test = deterministic_campaign_split(examples, args.holdout_fraction)
+        train_pool, test = deterministic_campaign_split(examples, args.holdout_fraction)
         test_campaigns = sorted({item.campaign for item in test})
+    train, calibration = deterministic_campaign_split(train_pool, 0.2, salt="calibration")
     model = LinearSMSModel(epochs=args.epochs).fit([(item.text, item.label) for item in train])
+    calibration_labels = [item.label for item in calibration]
+    calibration_scores = [model.predict_proba(item.text) for item in calibration]
+    operating_point = select_threshold(calibration_labels, calibration_scores)
     labels = [item.label for item in test]
     scores = [model.predict_proba(item.text) for item in test]
-    report = binary_metrics(labels, scores)
+    report = binary_metrics(labels, scores, threshold=float(operating_point["threshold"]))
     report["pr_auc"] = pr_auc(labels, scores)
     report["train_count"] = len(train)
+    report["calibration_count"] = len(calibration)
     report["test_campaign_count"] = len(test_campaigns)
     report["test_campaigns_preview"] = test_campaigns[:10]
     report["dataset_labels"] = {"train": {str(label): sum(item.label == label for item in train) for label in (0, 1)}, "test": {str(label): sum(item.label == label for item in test) for label in (0, 1)}}
     args.artifact.parent.mkdir(parents=True, exist_ok=True)
-    args.artifact.write_text(json.dumps({"model": model.to_dict(), "evaluation": report}, indent=2) + "\n", encoding="utf-8")
+    args.artifact.write_text(json.dumps({"model": model.to_dict(), "runtime": {"threshold": operating_point["threshold"], "review_band": 0.02, "max_chars": 4096}, "calibration": operating_point, "evaluation": report}, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2))
 
 

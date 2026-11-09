@@ -10,6 +10,7 @@ from guardian_models.dataset import SMSExample, campaign_split, deterministic_ca
 from guardian_models.metrics import binary_metrics, pr_auc
 from guardian_models.normalize import extract_urls, normalize_text, normalize_url
 from guardian_models.sms_model import LinearSMSModel
+from guardian_models.runtime import SMSRuntime
 
 
 class NormalizationTests(unittest.TestCase):
@@ -53,7 +54,7 @@ class TrainingTests(unittest.TestCase):
 
     def test_deterministic_split_keeps_both_labels_and_groups_intact(self):
         examples = [SMSExample("bad a", 1, "a"), SMSExample("good b", 0, "b"), SMSExample("bad c", 1, "c"), SMSExample("good d", 0, "d")]
-        train, test = deterministic_campaign_split(examples, 0.5)
+        train, test = deterministic_campaign_split(examples, 0.5, salt="test")
         self.assertEqual({item.label for item in train}, {0, 1})
         self.assertEqual({item.label for item in test}, {0, 1})
         self.assertTrue({item.campaign for item in train}.isdisjoint({item.campaign for item in test}))
@@ -74,6 +75,14 @@ class TrainingTests(unittest.TestCase):
         self.assertEqual(report["false_positive_rate"], 0.0)
         self.assertEqual(report["f1"], 1.0)
         self.assertEqual(pr_auc([1, 1, 0, 0], [0.9, 0.8, 0.2, 0.1]), 1.0)
+
+    def test_runtime_marks_clear_alert_and_bounds_input(self):
+        model = LinearSMSModel(epochs=30).fit([("urgent verify otp", 1), ("delivery arrives tomorrow", 0)])
+        runtime = SMSRuntime(model, threshold=0.5, review_band=0.02, max_chars=32)
+        alert = runtime.analyze("urgent verify otp")
+        self.assertEqual(alert["decision_state"], "ALERT")
+        bounded = runtime.analyze("delivery arrives tomorrow " + "x" * 100)
+        self.assertTrue(bounded["truncated_input"])
 
 
 if __name__ == "__main__":

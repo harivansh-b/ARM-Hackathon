@@ -21,7 +21,7 @@ def _id(source: str, value: str) -> str:
     return f"{source[0]}{digest}"
 
 
-def _tier(score: float) -> str:
+def risk_tier_for_score(score: float) -> str:
     if score >= 0.85:
         return "CRITICAL"
     if score >= 0.65:
@@ -45,7 +45,7 @@ def analyze_sms(text: str, timestamp: int | None = None, sender: str | None = No
         score += 0.18
     score = min(score, 0.99)
     value = sender or hashlib.sha256(clean.encode()).hexdigest()[:16]
-    record = EvidenceRecord(_id("SMS", value), "SMS", "SMISHING", timestamp or int(time.time()), {"type": "SMS", "value": value}, _tier(score), round(score, 4), reasons)
+    record = EvidenceRecord(_id("SMS", value), "SMS", "SMISHING", timestamp or int(time.time()), {"type": "SMS", "value": value}, risk_tier_for_score(score), round(score, 4), reasons)
     result = record.to_dict()
     result["extracted_urls"] = urls
     return result
@@ -76,7 +76,7 @@ def analyze_url(url: str, timestamp: int | None = None) -> dict:
         reasons.append("User-information delimiter in URL")
         score += 0.25
     score = min(score, 0.99)
-    record = EvidenceRecord(_id("URL", normalized), "URL", "PHISHING_URL", timestamp or int(time.time()), {"type": "DOMAIN", "value": domain}, _tier(score), round(score, 4), reasons)
+    record = EvidenceRecord(_id("URL", normalized), "URL", "PHISHING_URL", timestamp or int(time.time()), {"type": "DOMAIN", "value": domain}, risk_tier_for_score(score), round(score, 4), reasons)
     result = record.to_dict()
     result["normalized_url"] = normalized
     return result

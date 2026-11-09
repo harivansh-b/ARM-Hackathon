@@ -8,6 +8,26 @@ Guardian is an offline-first Android security assistant for a smishing kill chai
 
 The system combines SMS, URL, app and network evidence into one incident timeline and explains the result in plain language.
 
+## Architecture diagram
+
+```mermaid
+flowchart LR
+    SMS[SMS / shared URL / app event] --> N[Normalize]
+    N --> C[Rules and compact models]
+    C --> E[Structured evidence]
+    E --> F[Entity graph and fusion]
+    F --> A[Deterministic alert]
+    A --> L[Llama on demand]
+    L --> V[Verifier]
+    V -->|pass| A
+    V -->|fail or timeout| T[Template fallback]
+    NET[Guardian Net VPN metadata] -. batched metadata .-> E
+    DATA[Redacted public data] --> TRAIN[Train and calibrate]
+    TRAIN -. signed artifact .-> C
+```
+
+The editable full diagram is in [docs/guardian-architecture.mmd](docs/guardian-architecture.mmd).
+
 ## Security boundary
 
 Guardian uses two Android application components:
@@ -28,6 +48,8 @@ This is a privacy boundary enforced by Android permissions, not only a code-orga
 7. Show a deterministic explanation immediately.
 8. Optionally use local Llama only to paraphrase the already-decided evidence.
 
+The runtime uses a calibrated threshold and three states: `ALERT` for a clear detector result, `REVIEW` for an uncertain result that needs cautious wording, and `BENIGN_CANDIDATE` for a low-scoring result. `BENIGN_CANDIDATE` is not a claim that the message is safe.
+
 ## Person C service
 
 The `person-c` directory contains the Models and Llama workstream:
@@ -36,7 +58,9 @@ The `person-c` directory contains the Models and Llama workstream:
 - shared evidence-record contract;
 - normalization utilities;
 - tests and command-line smoke checks;
-- future homes for trained models, calibration, ExecuTorch exports and the Llama verifier.
+- campaign-safe training and evaluation;
+- calibrated runtime artifacts with threshold and latency configuration;
+- the future home for ExecuTorch exports and the Llama verifier.
 
 Person C supplies model artifacts and interfaces to Core. Person C does not own the final security verdict: detectors and Core fusion do.
 
@@ -56,4 +80,4 @@ Every stage must pass reliability tests before the next stage is enabled. VPN fa
 
 ## Current status
 
-This repository contains planning documents and the initial Person C baseline. Accuracy, calibration, phone performance, Android permission behaviour, ExecuTorch compatibility and the full kill-chain demo remain to be measured on the target device.
+The repository now includes a Playwright-collected, redacted public corpus, campaign/template-aware splitting, calibrated SMS inference and real-time safety states. The public-corpus results are smoke benchmarks. Accuracy under distribution shift, false-positive behaviour on local legitimate messages, phone latency/memory, Android permission behaviour, ExecuTorch compatibility and the full kill-chain demo still require validation on the target device.

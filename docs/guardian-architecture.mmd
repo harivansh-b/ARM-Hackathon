@@ -1,0 +1,50 @@
+flowchart LR
+    subgraph Device[Arm Android phone]
+        subgraph Core[Guardian Core APK - no INTERNET]
+            SMS[SMS receiver]
+            Link[Link Guard]
+            App[App-risk sensor]
+            Norm[Normalizer\n+NFKC, confusables, URL canonicalisation]
+            Cascade[Detector cascade\n+rules -> linear/tree -> small neural]
+            Evidence[Evidence records\n+IDs, indicators, scores, provenance]
+            Fusion[Entity graph and fusion\n+dedupe, calibration, severity]
+            Store[(Encrypted evidence store)]
+            Alert[Deterministic alert\n+template shown immediately]
+            Llama[Llama service\n+on demand]
+            Verify[Grounding verifier\n+fallback on failure]
+            SMS --> Norm
+            Link --> Norm
+            App --> Norm
+            Norm --> Cascade --> Evidence --> Fusion
+            Fusion --> Store
+            Fusion --> Alert
+            Alert --> Llama --> Verify
+            Verify --> Alert
+        end
+
+        subgraph Net[Guardian Net APK - INTERNET + VPN]
+            VPN[VpnService]
+            Relay[Fail-open relay\n+protected sockets]
+            Taps[DNS, flow, TLS metadata, UID]
+            VPN --> Relay --> Taps
+        end
+
+        Net -. batched metadata only .-> Evidence
+    end
+
+    subgraph PersonC[Person C model workstream]
+        Public[Public corpus\n+redacted + provenance]
+        Split[Campaign/template split]
+        Train[SMS/URL training]
+        Cal[Calibration\n+operating threshold]
+        Artifact[Signed model artifact\n+hash + runtime config]
+        Public --> Split --> Train --> Cal --> Artifact
+    end
+
+    Artifact -. imported offline .-> Cascade
+    Artifact -. loaded on demand .-> Llama
+
+    classDef boundary fill:#eef6ff,stroke:#3169a5,stroke-width:1px;
+    classDef safety fill:#fff3e6,stroke:#b45f06,stroke-width:1px;
+    class Core,Net boundary;
+    class Alert,Verify,Fusion safety;
