@@ -1,83 +1,88 @@
 # Guardian Architecture
 
-## Product purpose
+## Scope
 
-Guardian is an offline-first Android security assistant for a smishing kill chain:
+Guardian is an offline-first SMS security assistant for an ARM Linux target. Person C owns the SMS/URL models, data pipeline, evidence contract and Llama explanation interface. The primary Phase 1 scenario is smishing: a message attempts to create urgency, impersonate a trusted service, obtain credentials, request payment, or direct the user to a suspicious URL.
 
-`SMS lure -> suspicious URL -> DNS or network behaviour -> optional app-risk signal`
-
-The system combines SMS, URL, app and network evidence into one incident timeline and explains the result in plain language.
-
-## Architecture diagram
+## End-to-end flow
 
 ```mermaid
 flowchart LR
-    SMS[SMS / shared URL / app event] --> N[Normalize]
-    N --> C[Rules and compact models]
-    C --> E[Structured evidence]
-    E --> F[Entity graph and fusion]
-    F --> A[Deterministic alert]
-    A --> L[Llama on demand]
-    L --> V[Verifier]
-    V -->|pass| A
-    V -->|fail or timeout| T[Template fallback]
-    NET[Guardian Net VPN metadata] -. batched metadata .-> E
-    DATA[Redacted public data] --> TRAIN[Train and calibrate]
-    TRAIN -. signed artifact .-> C
+    Input[SMS input] --> Norm[Normalize text and URLs]
+    Norm --> Lang[Language and script routing]
+    Lang --> Detect[Fast detector\nrules plus compact linear model]
+    Detect --> Evidence[Structured evidence\nscore, tier, signals, provenance]
+    Evidence --> Decision[Calibrated decision\nALERT / REVIEW / BENIGN_CANDIDATE]
+    Decision --> Explain[Deterministic explanation]
+    Evidence -. structured evidence only .-> Llama[Llama-family model\nExecuTorch on device]
+    Llama --> Verify[Output verifier]
+    Verify --> Explain
+    Explain --> User[Safe recommendation]
+    Public[Public and consented data] --> Split[Campaign/time split]
+    Split --> Train[Train and evaluate]
+    Train --> Artifact[Versioned artifact]
+    Artifact -. offline import .-> Detect
 ```
 
-The editable full diagram is in [docs/guardian-architecture.mmd](docs/guardian-architecture.mmd).
+The editable diagram is [docs/guardian-architecture.mmd](docs/guardian-architecture.mmd).
 
-## Security boundary
+## Detection boundary
 
-Guardian uses two Android application components:
+The detector is the security authority. It normalizes input, extracts URLs, evaluates deterministic signals, and optionally adds a compact model score. It emits evidence such as urgency, credential request, payment language, impersonation, suspicious link, or numeric sender context.
 
-- **Core**: receives SMS, checks URLs, evaluates app metadata, stores evidence, fuses findings and displays alerts. Core must not request `INTERNET`.
-- **Net**: owns `VpnService`, forwards traffic and emits DNS/flow metadata. Net must not access SMS content, run the Core models or store message content.
+The Llama-family model is advisory. It receives structured evidence rather than raw SMS by default and may produce a concise explanation in the selected language. It must not change the detector score or downgrade a warning. A timeout, invalid output, or verifier failure falls back to the deterministic explanation.
 
-This is a privacy boundary enforced by Android permissions, not only a code-organization choice.
+## Runtime states
 
-## Evidence flow
+| State | Meaning | User-facing behavior |
+|---|---|---|
+| `ALERT` | Score is above the calibrated threshold | Show warning and safe action |
+| `REVIEW` | Score is within the review band | Ask the user to verify independently |
+| `BENIGN_CANDIDATE` | No strong signal was found | Avoid claiming the message is safe |
 
-1. Collect SMS, URLs, app metadata and network summaries.
-2. Normalize text and URLs, including Unicode confusables and canonical domains.
-3. Run deterministic rules and compact models before any language-model inference.
-4. Emit structured evidence with an ID, source, event type, timestamp, entity, score, tier and reasons.
-5. Deduplicate and correlate evidence by entity and time window.
-6. Assign the security tier using detector evidence and a documented fusion table.
-7. Show a deterministic explanation immediately.
-8. Optionally use local Llama only to paraphrase the already-decided evidence.
+Input is bounded to the artifact’s configured maximum length. No URL is opened, no DNS lookup is required for SMS detection, and no message is sent to a remote service.
 
-The runtime uses a calibrated threshold and three states: `ALERT` for a clear detector result, `REVIEW` for an uncertain result that needs cautious wording, and `BENIGN_CANDIDATE` for a low-scoring result. `BENIGN_CANDIDATE` is not a claim that the message is safe.
+## Multilingual path
 
-## Person C service
+Language routing is a lightweight offline heuristic. URLs are excluded from language selection. Hindi Devanagari text is labelled `hi`; Roman Hindi markers are labelled `hinglish`; mixed Hindi/English text is labelled `hi-en`. These labels select presentation and evidence vocabulary; they are not a claim of linguistic certainty.
 
-The `person-c` directory contains the Models and Llama workstream:
+The public multilingual corpus provides English and machine-translated Hindi. Hinglish remains a separate synthetic or consented data track until a suitable public source is verified.
 
-- deterministic SMS and URL baselines;
-- shared evidence-record contract;
-- normalization utilities;
-- tests and command-line smoke checks;
-- campaign-safe training and evaluation;
-- calibrated runtime artifacts with threshold and latency configuration;
-- the future home for ExecuTorch exports and the Llama verifier.
+## Evidence contract
 
-Person C supplies model artifacts and interfaces to Core. Person C does not own the final security verdict: detectors and Core fusion do.
+Each detector result contains:
 
-## Llama safety contract
+```text
+evidence_id, source, event_type, timestamp, entity,
+risk_tier, score, reasons, related_ids
+```
 
-Llama receives compact structured evidence rather than raw SMS by default. Its output must be checked for invented entities, unsupported reassurance, unauthorized actions, excessive length and contradictions. If loading, generation or verification fails, Core keeps the deterministic explanation.
+SMS-specific fields include language metadata, matched signals, deterministic safe action, extracted URLs and a human-readable explanation. IDs are stable hashes of source and entity values; raw message text is not stored in the evidence record.
 
-## Network rollout
+## Data and model lifecycle
 
-- **N0**: Core-only operation.
-- **N1**: DNS sentinel and forwarding.
-- **N2**: UDP/QUIC pass-through.
-- **N3**: TCP relay and available TLS metadata.
-- **N4**: optional IPv6, LAN inclusion and additional QUIC parsing.
+1. Collect only public, licensed, consented, or synthetic data.
+2. Redact phone numbers and email addresses before storage.
+3. Assign campaign/template groups before splitting.
+4. Keep campaign groups disjoint across train, calibration and test sets.
+5. Calibrate the operating threshold on validation data, never on the test set.
+6. Record dataset source, label balance, split, model format, runtime configuration and target-device measurements in the artifact/report.
+7. Import the artifact offline and verify its format before activation.
 
-Every stage must pass reliability tests before the next stage is enabled. VPN failure is fail-open: normal connectivity returns and Core continues SMS and URL protection.
+The Playwright scraper writes `public_sms.jsonl`, `public_sms_multilingual.jsonl`, and their provenance files. The multilingual source is machine-translated and heavily imbalanced, so it is suitable for robustness checks rather than standalone production evaluation.
 
-## Current status
+## Device boundary
 
-The repository now includes a Playwright-collected, redacted public corpus, campaign/template-aware splitting, calibrated SMS inference and real-time safety states. The public-corpus results are smoke benchmarks. Accuracy under distribution shift, false-positive behaviour on local legitimate messages, phone latency/memory, Android permission behaviour, ExecuTorch compatibility and the full kill-chain demo still require validation on the target device.
+The planned Android deployment separates responsibilities:
+
+- **Core** receives SMS, runs local models, stores minimal evidence, fuses findings and displays alerts. It should not request `INTERNET`.
+- **Net** owns `VpnService` and emits only authorised DNS/flow metadata. It must not access SMS content or run the Core models.
+- **ExecuTorch runtime** executes the required Llama-family model locally on the selected ARM target.
+
+The separation is a permission and data-flow boundary, not only a package layout. Network failure must not disable local SMS detection.
+
+## Current implementation status
+
+Implemented: SMS and URL baselines, multilingual routing, Hindi/Hinglish indicators, evidence output, model-feature explanations, campaign-safe training, calibration, public Playwright collection, source metadata and unit tests.
+
+Pending for the final device demonstration: ExecuTorch model export and measured Llama inference, Android/Core integration, target-device RAM and thermal measurements, time-ordered or independently collected evaluation, and authorised offline lab validation.

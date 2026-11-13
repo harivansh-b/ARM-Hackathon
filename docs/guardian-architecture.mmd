@@ -4,18 +4,19 @@ flowchart LR
             SMS[SMS receiver]
             Link[Link Guard]
             App[App-risk sensor]
-            Norm[Normalizer\n+NFKC, confusables, URL canonicalisation]
-            Cascade[Detector cascade\n+rules -> linear/tree -> small neural]
+            Norm[Normalizer\n+NFKC, script and URL handling]
+            Lang[Language routing\n+English, Hindi, Hinglish]
+            Cascade[Detector cascade\n+rules -> compact model]
             Evidence[Evidence records\n+IDs, indicators, scores, provenance]
             Fusion[Entity graph and fusion\n+dedupe, calibration, severity]
             Store[(Encrypted evidence store)]
             Alert[Deterministic alert\n+template shown immediately]
             Llama[Llama service\n+on demand]
             Verify[Grounding verifier\n+fallback on failure]
-            SMS --> Norm
+            SMS --> Norm --> Lang --> Cascade
             Link --> Norm
             App --> Norm
-            Norm --> Cascade --> Evidence --> Fusion
+            Cascade --> Evidence --> Fusion
             Fusion --> Store
             Fusion --> Alert
             Alert --> Llama --> Verify
@@ -33,7 +34,7 @@ flowchart LR
     end
 
     subgraph PersonC[Person C model workstream]
-        Public[Public corpus\n+redacted + provenance]
+        Public[Public corpus\n+redacted + provenance + language]
         Split[Campaign/template split]
         Train[SMS/URL training]
         Cal[Calibration\n+operating threshold]
