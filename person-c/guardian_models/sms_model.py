@@ -9,10 +9,11 @@ from collections import Counter
 
 from .normalize import normalize_text
 
-TOKEN_RE = re.compile(r"[a-z0-9_]+")
+TOKEN_RE = re.compile(r"[^\W_]+", re.UNICODE)
 
 
 def _features(text: str) -> Counter[str]:
+    """Build small word, bigram and character features with no dependencies."""
     clean = normalize_text(text)
     tokens = TOKEN_RE.findall(clean)
     features: Counter[str] = Counter()
@@ -49,12 +50,14 @@ class LinearSMSModel:
         return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
     def predict_proba(self, text: str) -> float:
+        """Return the sigmoid score produced by the trained linear model."""
         score = self.bias
         for feature, value in _features(text).items():
             score += self.weights.get(feature, 0.0) * value
         return _sigmoid(score)
 
     def fit(self, examples: list[tuple[str, int]]) -> "LinearSMSModel":
+        """Train deterministic SGD over text/label pairs."""
         if not examples:
             raise ValueError("cannot train on an empty dataset")
         ordered = sorted(examples, key=lambda item: self._order(item[0]))
@@ -69,6 +72,7 @@ class LinearSMSModel:
         return self
 
     def explain(self, text: str, limit: int = 5) -> list[dict[str, float | str]]:
+        """Return the highest absolute feature contributions for this SMS."""
         values = _features(text)
         ranked = sorted(((feature, self.weights.get(feature, 0.0) * count) for feature, count in values.items()), key=lambda item: abs(item[1]), reverse=True)
         return [{"feature": feature, "contribution": round(contribution, 6)} for feature, contribution in ranked[:limit] if contribution != 0]

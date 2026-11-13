@@ -24,11 +24,18 @@ class SMSRuntime:
         return cls(LinearSMSModel.from_dict(payload["model"]), float(config.get("threshold", 0.5)), float(config.get("review_band", 0.02)), int(config.get("max_chars", 4096)))
 
     def analyze(self, text: str, timestamp: int | None = None, sender: str | None = None) -> dict:
+        """Run bounded inference and map the score to a cautious decision state.
+
+        ``REVIEW`` is deliberately preserved around the calibrated threshold.
+        ``BENIGN_CANDIDATE`` means no strong signal was found, not that the SMS
+        has been proven safe.
+        """
         started = time.perf_counter()
         bounded = text[: self.max_chars]
         score = self.model.predict_proba(bounded)
         result = analyze_sms(bounded, timestamp=timestamp, sender=sender)
         result["model_score"] = round(score, 6)
+        result["model_evidence"] = self.model.explain(bounded, limit=6)
         result["score"] = round(score, 6)
         result["risk_tier"] = risk_tier_for_score(score)
         if abs(score - self.threshold) <= self.review_band:
