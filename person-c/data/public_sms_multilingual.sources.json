@@ -1,0 +1,23 @@
+{
+  "collected_at": "2026-11-13T14:17:25.267Z",
+  "collection_method": "Playwright browser request extraction from the Hugging Face public dataset file",
+  "source": {
+    "name": "SMS Spam Multilingual Collection Dataset",
+    "dataset_url": "https://huggingface.co/datasets/dbarbedillo/SMS_Spam_Multilingual_Collection_Dataset",
+    "file_url": "https://huggingface.co/datasets/dbarbedillo/SMS_Spam_Multilingual_Collection_Dataset/resolve/main/data-augmented.csv",
+    "license": "GPL (as declared by the dataset card)",
+    "original_data_note": "The card says the English SMS Spam Collection was machine-translated into Hindi and other languages. Hindi quality must be reviewed before production claims."
+  },
+  "fields": [
+    "en",
+    "hi"
+  ],
+  "records": 10271,
+  "positives": 1254,
+  "negatives": 9017,
+  "redactions": [
+    "phone numbers",
+    "email addresses"
+  ],
+  "hinglish_note": "No verified Hinglish field was found; keep Hinglish examples separate and label them as synthetic or consented."
+}

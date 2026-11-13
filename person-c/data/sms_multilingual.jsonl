@@ -1,0 +1,24 @@
+{"id":"ml-001","campaign":"bank-kyc-hi-1","label":1,"language":"hi","category":"kyc_impersonation","source":"synthetic","text":"आपका बैंक खाता बंद हो जाएगा। KYC पूरा करने के लिए OTP भेजें।"}
+{"id":"ml-002","campaign":"bank-kyc-hi-2","label":1,"language":"hi","category":"kyc_impersonation","source":"synthetic","text":"तुरंत अपना पिन साझा करें, वरना आपका खाता निलंबित कर दिया जाएगा।"}
+{"id":"ml-003","campaign":"bank-kyc-en-1","label":1,"language":"en","category":"kyc_impersonation","source":"synthetic","text":"Urgent KYC update required. Share your OTP now or your bank account will be blocked."}
+{"id":"ml-004","campaign":"bank-kyc-hinglish-1","label":1,"language":"hinglish","category":"kyc_impersonation","source":"synthetic","text":"Aapka bank account band ho jayega. KYC ke liye OTP bhejo abhi."}
+{"id":"ml-005","campaign":"bank-alert-legit-1","label":0,"language":"en","category":"bank_alert","source":"synthetic","text":"Your monthly account statement is ready in the official bank app."}
+{"id":"ml-006","campaign":"bank-alert-legit-2","label":0,"language":"hi","category":"bank_alert","source":"synthetic","text":"आपका बैंक स्टेटमेंट आधिकारिक ऐप में उपलब्ध है।"}
+{"id":"ml-007","campaign":"bank-alert-legit-3","label":0,"language":"hinglish","category":"bank_alert","source":"synthetic","text":"Aapka monthly statement official banking app mein available hai."}
+{"id":"ml-008","campaign":"bank-otp-legit-1","label":0,"language":"en","category":"otp","source":"synthetic","text":"Your OTP is 123456 for login. Do not share it with anyone."}
+{"id":"ml-009","campaign":"prize-fee-hi-1","label":1,"language":"hi","category":"prize_scam","source":"synthetic","text":"बधाई हो! इनाम पाने के लिए पहले प्रोसेसिंग फीस जमा करें।"}
+{"id":"ml-010","campaign":"prize-fee-en-1","label":1,"language":"en","category":"prize_scam","source":"synthetic","text":"Congratulations, you won cash. Pay a processing fee to claim your prize at https://reward.test/claim"}
+{"id":"ml-011","campaign":"prize-fee-hinglish-1","label":1,"language":"hinglish","category":"prize_scam","source":"synthetic","text":"Aap prize jeet gaye ho. Cash claim karne ke liye fee pay karo."}
+{"id":"ml-012","campaign":"delivery-legit-hi-1","label":0,"language":"hi","category":"delivery","source":"synthetic","text":"आपका पार्सल कल दोपहर 2 बजे डिलीवर किया जाएगा।"}
+{"id":"ml-013","campaign":"delivery-legit-en-1","label":0,"language":"en","category":"delivery","source":"synthetic","text":"Your parcel is out for delivery and will arrive tomorrow."}
+{"id":"ml-014","campaign":"delivery-scam-en-1","label":1,"language":"en","category":"delivery_scam","source":"synthetic","text":"Your parcel is held. Pay a small customs fee immediately using this link https://parcel.test/pay"}
+{"id":"ml-015","campaign":"delivery-scam-hi-1","label":1,"language":"hi","category":"delivery_scam","source":"synthetic","text":"आपकी डिलीवरी रोक दी गई है। पार्सल पाने के लिए अभी भुगतान करें।"}
+{"id":"ml-016","campaign":"upi-scam-hinglish-1","label":1,"language":"hinglish","category":"upi_scam","source":"synthetic","text":"UPI refund lene ke liye QR scan karo aur PIN enter karo."}
+{"id":"ml-017","campaign":"upi-legit-en-1","label":0,"language":"en","category":"upi_notification","source":"synthetic","text":"UPI payment of INR 250 was received. View details in your banking app."}
+{"id":"ml-018","campaign":"upi-legit-hi-1","label":0,"language":"hi","category":"upi_notification","source":"synthetic","text":"आपके खाते में 250 रुपये का UPI भुगतान प्राप्त हुआ है।"}
+{"id":"ml-019","campaign":"support-scam-hinglish-1","label":1,"language":"hinglish","category":"support_impersonation","source":"synthetic","text":"Customer care se bol raha hoon. Remote app install karo, refund process karna hai."}
+{"id":"ml-020","campaign":"support-scam-hi-1","label":1,"language":"hi","category":"support_impersonation","source":"synthetic","text":"कस्टमर केयर से बोल रहा हूं। रिफंड के लिए यह ऐप इंस्टॉल करें।"}
+{"id":"ml-021","campaign":"travel-legit-en-1","label":0,"language":"en","category":"travel","source":"synthetic","text":"Your flight booking is confirmed. Check the itinerary in the airline app."}
+{"id":"ml-022","campaign":"travel-legit-hi-1","label":0,"language":"hi","category":"travel","source":"synthetic","text":"आपकी ट्रेन बुकिंग की पुष्टि हो गई है। यात्रा विवरण ऐप में देखें।"}
+{"id":"ml-023","campaign":"government-scam-hi-1","label":1,"language":"hi","category":"government_impersonation","source":"synthetic","text":"सरकारी सब्सिडी पाने के लिए अपना आधार और OTP इस लिंक पर दर्ज करें https://apply.test"}
+{"id":"ml-024","campaign":"government-info-en-1","label":0,"language":"en","category":"government_notice","source":"synthetic","text":"A public service announcement is available on the official government website. Do not reply to this message."}
