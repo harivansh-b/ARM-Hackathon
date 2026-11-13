@@ -1,4 +1,10 @@
-"""Small, explicit dataset utilities for campaign-safe evaluation."""
+"""Dataset loading and leakage-resistant splitting for Person-C.
+
+The JSONL format deliberately keeps campaign/template identity separate from
+the message text. Splitting by campaign prevents near-duplicate messages from
+appearing in both training and evaluation, which would make the metrics look
+better than real-world performance.
+"""
 
 from __future__ import annotations
 
@@ -10,16 +16,31 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class SMSExample:
+    """One labelled SMS example used by training and evaluation.
+
+    ``language`` and ``category`` are metadata for analysis and reporting;
+    they are not used as labels by the baseline classifier. Keeping them in
+    the row makes it possible to report English/Hindi/Hinglish performance
+    without changing the model API.
+    """
+
     text: str
     label: int
     campaign: str
     example_id: str = ""
+    language: str = "unknown"
+    category: str = "unspecified"
+    source: str = "synthetic"
 
     def __post_init__(self) -> None:
         if self.label not in (0, 1):
             raise ValueError("label must be 0 (benign) or 1 (scam)")
         if not self.campaign:
             raise ValueError("campaign is required to prevent campaign leakage")
+        if not self.text.strip():
+            raise ValueError("text must not be empty")
+        if self.language not in {"en", "hi", "hinglish", "hi-en", "unknown"}:
+            raise ValueError("unsupported language metadata")
 
 
 def load_jsonl(path: str | Path) -> list[SMSExample]:
@@ -29,7 +50,15 @@ def load_jsonl(path: str | Path) -> list[SMSExample]:
             continue
         try:
             row = json.loads(line)
-            examples.append(SMSExample(str(row["text"]), int(row["label"]), str(row["campaign"]), str(row.get("id", ""))))
+            examples.append(SMSExample(
+                text=str(row["text"]),
+                label=int(row["label"]),
+                campaign=str(row["campaign"]),
+                example_id=str(row.get("id", "")),
+                language=str(row.get("language", "unknown")),
+                category=str(row.get("category", "unspecified")),
+                source=str(row.get("source", "synthetic")),
+            ))
         except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
             raise ValueError(f"invalid JSONL row {line_number}: {exc}") from exc
     if not examples:

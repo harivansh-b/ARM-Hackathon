@@ -6,9 +6,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parents[1]))
 
 from guardian_models.detectors import analyze_sms, analyze_url
-from guardian_models.dataset import SMSExample, campaign_split, deterministic_campaign_split
+from guardian_models.dataset import SMSExample, campaign_split, deterministic_campaign_split, load_jsonl
 from guardian_models.metrics import binary_metrics, pr_auc
-from guardian_models.normalize import extract_urls, normalize_text, normalize_url
+from guardian_models.normalize import detect_language, extract_urls, normalize_text, normalize_url
 from guardian_models.sms_model import LinearSMSModel
 from guardian_models.runtime import SMSRuntime
 
@@ -22,6 +22,10 @@ class NormalizationTests(unittest.TestCase):
 
     def test_removes_fragment_and_default_port(self):
         self.assertEqual(normalize_url("HTTPS://Example.com:443/login#x"), "https://example.com/login")
+
+    def test_detects_hindi_and_hinglish(self):
+        self.assertEqual(detect_language("आपका खाता बंद हो जाएगा"), "hi")
+        self.assertEqual(detect_language("Aapka khata band ho jayega, verify now"), "hinglish")
 
 
 class DetectorTests(unittest.TestCase):
@@ -44,8 +48,20 @@ class DetectorTests(unittest.TestCase):
         self.assertNotIn("llama", result)
         self.assertIn("risk_tier", result)
 
+    def test_sms_exposes_multilingual_explainable_signals(self):
+        result = analyze_sms("आपका बैंक खाता बंद हो जाएगा। OTP भेजें https://bad.test")
+        self.assertEqual(result["language"], "hi")
+        self.assertTrue(result["matched_signals"])
+        self.assertIn("safe_action", result)
+
 
 class TrainingTests(unittest.TestCase):
+    def test_multilingual_starter_dataset_has_both_labels_and_languages(self):
+        dataset = load_jsonl(Path(__file__).parents[1] / "data" / "sms_multilingual.jsonl")
+        self.assertEqual({item.label for item in dataset}, {0, 1})
+        self.assertTrue({item.language for item in dataset} >= {"en", "hi", "hinglish"})
+        self.assertTrue(all(item.category != "unspecified" for item in dataset))
+
     def test_campaign_split_keeps_campaigns_disjoint(self):
         examples = [SMSExample("bad", 1, "a"), SMSExample("good", 0, "b"), SMSExample("bad two", 1, "a")]
         train, test = campaign_split(examples, {"b"})

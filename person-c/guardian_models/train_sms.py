@@ -13,6 +13,12 @@ from .sms_model import LinearSMSModel
 
 
 def main() -> None:
+    """Train, calibrate and evaluate a compact campaign-safe SMS model.
+
+    The command intentionally writes evaluation metadata into the artifact so
+    a reviewer can reproduce which split, threshold and record counts were
+    used. It does not fetch data or contact a network service.
+    """
     parser = argparse.ArgumentParser(description="Train Guardian's explainable SMS baseline")
     parser.add_argument("dataset", type=Path)
     parser.add_argument("artifact", type=Path)
