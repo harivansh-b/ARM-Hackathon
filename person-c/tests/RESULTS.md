@@ -1,27 +1,69 @@
-# Baseline Test Results
+# Person C Results
 
-Command:
+## Verification summary
+
+| Check | Result | Scope |
+|---|---:|---|
+| Python unit tests | **14 passed** | Normalization, detection, training, metrics, runtime and multilingual fixtures |
+| Python compilation | **Passed** | All `guardian_models` modules |
+| Scraper syntax check | **Passed** | `tools/scrape_public_sms.js` |
+| Multilingual corpus validation | **Passed** | JSONL schema, label balance and language counts |
+| Network dependency during inference | **None** | Detector and runtime execute locally |
+
+Run the unit tests with:
 
 ```text
 python -m unittest discover -s tests -v
 ```
 
-Result: 11 tests passed in 0.008 seconds.
+## Dataset inventory
 
-Coverage includes text and URL normalization, shared evidence output, SMS risk scoring, look-alike URL detection, campaign-safe splitting, model serialization, metrics, and the boundary that keeps Llama out of detector verdicts.
+| Dataset | Records | Positive | Negative | Languages | Use |
+|---|---:|---:|---:|---|---|
+| `sms_multilingual.jsonl` | 24 | 13 | 11 | en / hi / hinglish | Development fixture |
+| `public_sms.jsonl` | 34,100 | 29,273 | 4,827 | Primarily English | Existing baseline |
+| `public_sms_multilingual.jsonl` | 10,271 | 1,254 | 9,017 | English / Hindi | Robustness testing |
 
-The example training fixture is a smoke test only. Its `travel-2` holdout contains no scam examples, so recall and PR-AUC are not meaningful for that split. Real reporting must use licensed, campaign-separated data with both classes represented in the held-out set.
+The public multilingual corpus contains paired English/Hindi variants from the same source message. The scraper assigns a shared campaign ID so translated variants cannot cross a campaign-held-out split. Its Hindi text is machine-translated and its label distribution is highly imbalanced.
 
-## Public corpus smoke benchmark
+## Smoke benchmark results
 
-The Playwright scraper collected 34,100 redacted records: 29,273 positive phishing/spam records and 4,827 ham records. A deterministic 12,000-record subset produced a 9,612/2,388 campaign-group split:
+| Evaluation | Split | Precision | Recall | F1 | False-positive rate | PR-AUC |
+|---|---|---:|---:|---:|---:|---:|
+| Existing public baseline | 12,000-record campaign subset | 0.9990 | 0.9931 | 0.9960 | 0.0056 | 0.9998 |
+| Calibrated runtime | Same campaign subset with separate calibration | 1.0000 | 0.9750 | 0.9873 | 0.0000 | 0.9997 |
 
-`precision=0.9990`, `recall=0.9931`, `F1=0.9960`, `FPR=0.0056`, `PR-AUC=0.9998`.
+```text
+F1 score
+Baseline    99.60% |████████████████████|
+Calibrated  98.73% |███████████████████▊ |
 
-These numbers are not production claims. The public corpus is source-imbalanced, the phishing source is positive-only, and the legacy corpus has template-derived rather than true campaign IDs. A proper report still needs a time-ordered or independently collected evaluation set and hard-negative analysis.
+False-positive rate
+Baseline     0.56% |██████              |
+Calibrated   0.00% |                    |
+```
 
-## Calibrated runtime smoke benchmark
+These numbers are smoke benchmarks only. The source corpus is imbalanced, one phishing source is positive-only, and template-derived groups are not true campaign IDs. They must not be presented as production accuracy.
 
-The calibrated pipeline uses a separate campaign-group calibration split and selects an operating threshold with target false-positive rate ≤ 0.1% and recall floor ≥ 80%. On the same 12,000-record smoke subset, the resulting held-out report was `precision=1.0000`, `recall=0.9750`, `F1=0.9873`, `FPR=0.0000`, `PR-AUC=0.9997`.
+## Runtime behavior
 
-Runtime output is intentionally tri-state: `ALERT`, `REVIEW`, or `BENIGN_CANDIDATE`. It never claims that a message is safe, bounds input to 4,096 characters, records latency, and falls back to the rule detector if the trained artifact is unavailable.
+| Condition | Output |
+|---|---|
+| Clear high-risk score | `ALERT` with evidence and safe action |
+| Score near threshold | `REVIEW` with independent-verification guidance |
+| Low score | `BENIGN_CANDIDATE`, never a safety guarantee |
+| Missing/invalid advisory model | Deterministic detector explanation remains available |
+| Oversized input | Truncated to configured maximum and reported |
+
+The runtime also records inference latency and returns model-feature contributions for debugging and explainability.
+
+## Limitations and next measurements
+
+The current results do not yet establish target-device performance or multilingual quality. The final report should add:
+
+- per-language precision, recall, F1 and false-positive rate;
+- legitimate Indian OTP, UPI, bank, tax and delivery hard negatives;
+- time-ordered or independently collected evaluation;
+- ARM device latency, peak RAM, model size, temperature and sustained operation;
+- ExecuTorch model version, quantisation, backend and first-token latency;
+- authorised offline-lab evidence showing that core detection and guidance work with the network disconnected.
