@@ -36,12 +36,16 @@ class SMSRuntime:
         result = analyze_sms(bounded, timestamp=timestamp, sender=sender)
         result["model_score"] = round(score, 6)
         result["model_evidence"] = self.model.explain(bounded, limit=6)
-        result["score"] = round(score, 6)
-        result["risk_tier"] = risk_tier_for_score(score)
-        if abs(score - self.threshold) <= self.review_band:
-            result["decision_state"] = "REVIEW"
-        elif score >= self.threshold:
+        # Core evidence is authoritative for safety. The advisory model may
+        # escalate a result, but it must never downgrade a deterministic core
+        # warning or critical finding.
+        combined_score = max(score, float(result["score"]))
+        result["score"] = round(combined_score, 6)
+        result["risk_tier"] = risk_tier_for_score(combined_score)
+        if combined_score >= 0.65 or combined_score >= self.threshold:
             result["decision_state"] = "ALERT"
+        elif abs(combined_score - self.threshold) <= self.review_band:
+            result["decision_state"] = "REVIEW"
         else:
             result["decision_state"] = "BENIGN_CANDIDATE"
         result["truncated_input"] = len(text) > self.max_chars
