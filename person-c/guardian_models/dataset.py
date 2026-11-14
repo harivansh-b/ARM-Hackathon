@@ -31,6 +31,7 @@ class SMSExample:
     language: str = "unknown"
     category: str = "unspecified"
     source: str = "synthetic"
+    collection_date: str = ""
 
     def __post_init__(self) -> None:
         if self.label not in (0, 1):
@@ -58,6 +59,7 @@ def load_jsonl(path: str | Path) -> list[SMSExample]:
                 language=str(row.get("language", "unknown")),
                 category=str(row.get("category", "unspecified")),
                 source=str(row.get("source", "synthetic")),
+                collection_date=str(row.get("collection_date", "")),
             ))
         except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
             raise ValueError(f"invalid JSONL row {line_number}: {exc}") from exc
