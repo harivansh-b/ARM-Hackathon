@@ -8,6 +8,7 @@ flowchart LR
             Lang[Language routing\n+English, Hindi, Hinglish]
             Cascade[Detector cascade\n+rules -> compact model]
             Evidence[Evidence records\n+IDs, indicators, scores, provenance]
+            Bundle[Offline bundle validator\nhash, signature, expiry, rollback]
             Fusion[Entity graph and fusion\n+dedupe, calibration, severity]
             Store[(Encrypted evidence store)]
             Alert[Deterministic alert\n+template shown immediately]
@@ -21,6 +22,7 @@ flowchart LR
             Fusion --> Alert
             Alert --> Llama --> Verify
             Verify --> Alert
+            Bundle --> Cascade
         end
 
         subgraph Net[Guardian Net APK - INTERNET + VPN]

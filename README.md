@@ -2,6 +2,41 @@
 
 Guardian Person C is the offline SMS and URL detection workstream for an ARM Linux security assistant. The current vertical slice detects smishing, returns structured evidence, supports English/Hindi/Hinglish presentation, and keeps the language model outside the security decision.
 
+## Phase 1 implementation checklist
+
+### Done
+
+- [x] Primary scenario selected: offline SMS/smishing detection with URL inspection.
+- [x] Deterministic SMS and URL detectors with structured evidence.
+- [x] English, Hindi and Hinglish routing with safe guidance.
+- [x] Compact linear model, campaign-held-out training and threshold calibration.
+- [x] Per-language precision, recall, F1 and false-positive-rate evaluator.
+- [x] Indian legitimate OTP, UPI, bank, tax and delivery hard-negative fixture.
+- [x] Runtime safety fix: core `HIGH`/`CRITICAL` evidence cannot be downgraded by the advisory model.
+- [x] Explanation verifier and approved-action fallback playbook.
+- [x] Offline bundle integrity, signature and rollback checks.
+- [x] SMS-to-URL evidence linking and incident-storyline primitives.
+- [x] Network-denial host smoke test proving local detection and guidance execution.
+- [x] Reproducible tests, compilation checks and dataset validation.
+
+### Working stage
+
+- [ ] Expand hard negatives with consented, anonymised Indian messages.
+- [ ] Replace seed multilingual data with independently collected, time-ordered evaluation data.
+- [ ] Replace the HMAC bundle prototype with asymmetric Ed25519 signing in the Android packaging path.
+- [ ] Connect the verifier, bundle importer and evidence graph to the Android Core UI.
+- [ ] Add model card, SBOM, licence manifest and artifact SHA-256 release records.
+
+### Pending external validation
+
+- [ ] Export and execute a real Llama-family model through ExecuTorch.
+- [ ] Record ExecuTorch version, quantisation, backend, model size and first-token latency.
+- [ ] Measure ARM device latency, peak RAM, temperature, throttling and sustained operation.
+- [ ] Run the authorised disconnected-network lab test on the selected ARM target.
+- [ ] Complete Android SMS/URL integration and demo-video evidence.
+
+The checklist is intentionally honest: host-side software is implemented and tested, while target-device and authorised-lab claims remain unmeasured.
+
 ## What is implemented
 
 | Area | Implementation |
@@ -14,6 +49,7 @@ Guardian Person C is the offline SMS and URL detection workstream for an ARM Lin
 | Data quality | Campaign/template grouping, campaign-held-out splitting and calibration |
 | Public data | Playwright-collected baseline and multilingual English/Hindi corpus with provenance |
 | Integration boundary | JSON evidence contract for Core; Llama is an advisory explanation layer |
+| Safety controls | Explanation verifier, approved-action playbook, signed offline bundle checks and evidence linking |
 
 ## Repository layout
 
@@ -22,6 +58,7 @@ person-c/
   guardian_models/       Detector, model, runtime, dataset and metric code
   data/                  Synthetic fixtures, public JSONL data and provenance
   artifacts/             Generated model artifacts and evaluation metadata
+  evaluation/            Metrics, offline evidence, device and ExecuTorch runbooks
   tests/                 Unit tests and evaluation notes
   tools/                 Playwright collection script
 architecture.md          System design and safety boundaries
@@ -77,5 +114,9 @@ The detector owns the risk signal. Llama/ExecuTorch may paraphrase structured ev
 ## Limitations and next validation
 
 The public results are smoke benchmarks, not production accuracy claims. Final evaluation must use licensed or consented data, campaign/time-separated holdouts, legitimate Indian hard negatives, per-language metrics, target-device latency/RAM measurements, and an offline ARM demonstration.
+
+The final-evidence workstream is tracked in `person-c/evaluation/`: run `person-c/tools/evaluate_report.py` for grouped language and hard-negative metrics, then populate `person-c/evaluation/device_benchmark.csv` from the authorised ARM/ExecuTorch run. The offline-lab protocol requires the network to be disconnected and produces the evidence needed to claim that detection and guidance work without connectivity.
+
+The slide-driven software additions are implemented in `guardian_models.safety`, `guardian_models.bundles` and `guardian_models.evidence_graph`. They provide deterministic Llama-output rejection/fallback, tamper-and-rollback checks for offline packages, and SMS-to-URL evidence linking. The bundle prototype uses HMAC-SHA256 to remain dependency-free; production Android packaging should replace it with an asymmetric Ed25519 signature while retaining the same manifest checks.
 
 See [architecture.md](architecture.md), [results](person-c/tests/RESULTS.md) and [docs/guardian-architecture.mmd](docs/guardian-architecture.mmd).

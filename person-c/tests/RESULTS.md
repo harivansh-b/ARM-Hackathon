@@ -1,14 +1,35 @@
 # Person C Results
 
+Latest local verification run: **2026-11-14** (Asia/Calcutta).
+
+## Requirement checklist
+
+| Requirement | Status | Evidence or blocker |
+|---|---|---|
+| Complete SMS/URL vertical slice | **Done** | Detector, runtime, evidence contract and tests |
+| Multilingual metrics | **Done for development fixture** | `evaluation/report.json`; not production-quality evidence |
+| Legitimate Indian hard negatives | **Done as seed set** | 10 messages across five categories; expand with consented data |
+| Time-ordered/independent evaluation | **Working stage** | Date field and evaluator ready; verified independent collection pending |
+| Explanation safety and fallback | **Done** | Verifier rejects unsafe/injected output; deterministic playbook fallback |
+| Offline model/intelligence update validation | **Working stage** | HMAC prototype; asymmetric signing still required for release |
+| Evidence storyline linking | **Done as primitive** | SMS-to-URL correlation with time window |
+| ARM performance measurements | **Pending target** | Harness ready; no ARM target connected |
+| ExecuTorch Llama execution | **Pending target export** | Runtime metadata collector ready; package not installed locally |
+| Authorised offline-lab proof | **Pending authorisation/device** | Host smoke passed, but it is not lab evidence |
+| Android Core/Net integration | **Pending** | Current repository is the Person C model workstream |
+
 ## Verification summary
 
 | Check | Result | Scope |
 |---|---:|---|
-| Python unit tests | **14 passed** | Normalization, detection, training, metrics, runtime and multilingual fixtures |
+| Python unit tests | **19 passed** | Normalization, detection, training, metrics, runtime safety, verifier, bundle security, evidence linking and hard negatives |
 | Python compilation | **Passed** | All `guardian_models` modules |
 | Scraper syntax check | **Passed** | `tools/scrape_public_sms.js` |
 | Multilingual corpus validation | **Passed** | JSONL schema, label balance and language counts |
 | Network dependency during inference | **None** | Detector and runtime execute locally |
+| JSONL dataset validation | **4 datasets loaded** | 24 + 10 + 34,100 + 10,271 records |
+| Offline host smoke | **Passed** | Socket connections denied; core detection and guidance remained available |
+| Slide-driven software controls | **Passed** | Verifier/fallback, signed bundle checks and SMS-to-URL evidence linking |
 
 Run the unit tests with:
 
@@ -57,13 +78,39 @@ These numbers are smoke benchmarks only. The source corpus is imbalanced, one ph
 
 The runtime also records inference latency and returns model-feature contributions for debugging and explainability.
 
-## Limitations and next measurements
+## Final-evidence workstream (working stage)
 
-The current results do not yet establish target-device performance or multilingual quality. The final report should add:
+The repository now contains the measurement protocol and fixtures needed for the final report. Results are intentionally marked pending until collected from the authorised target-device run.
 
-- per-language precision, recall, F1 and false-positive rate;
-- legitimate Indian OTP, UPI, bank, tax and delivery hard negatives;
-- time-ordered or independently collected evaluation;
-- ARM device latency, peak RAM, model size, temperature and sustained operation;
-- ExecuTorch model version, quantisation, backend and first-token latency;
-- authorised offline-lab evidence showing that core detection and guidance work with the network disconnected.
+| Requirement | Working-stage evidence | Completion state |
+|---|---|---|
+| Per-language precision, recall, F1, FPR | `tools/evaluate_report.py`; grouped output in `evaluation/report.json` | Ready to run; not a production claim |
+| Indian hard negatives | `data/indian_hard_negatives.jsonl`: legitimate OTP, UPI, bank, tax and delivery, English/Hindi | Seed fixture; expand with consented samples |
+| Time-ordered/independent evaluation | `collection_date` is supported and the evaluator reports date coverage | Pending verified pre/post collection boundary |
+| ARM latency/RAM/size/temperature/sustained operation | `evaluation/device_benchmark.csv` schema and `evaluation/README.md` runbook | Pending authorised target-device run |
+| ExecuTorch version/quantisation/backend/first token | Required columns in `device_benchmark.csv` | Pending export and device measurement |
+| Offline-lab evidence | Disconnected-network test protocol in `evaluation/README.md` | Pending authorised lab log/screenshots |
+
+The host smoke artifact is `evaluation/offline_smoke_evidence.json`. It records a `CRITICAL` core result and safe guidance with network connections denied. It is explicitly not authorised lab evidence.
+
+The offline bundle implementation is a dependency-free HMAC prototype for the software contract. The target Android release should use an asymmetric signing key and keep the public key in the application; no shared signing secret should ship in the APK.
+
+Run the host-side evaluation from `person-c` with:
+
+```text
+python tools/evaluate_report.py artifacts/sms-multilingual.json data/sms_multilingual.jsonl data/indian_hard_negatives.jsonl --output evaluation/report.json
+```
+
+The host output is a reproducibility aid. It must be labelled development/seed evaluation until the multilingual and hard-negative sets are independently collected and reviewed.
+
+### Current seed-run output
+
+Using `artifacts/sms-multilingual.json` at threshold `0.893337` over the 24-row development fixture plus 10 hard negatives. This report was regenerated in the latest run and is stored at `evaluation/report.json`:
+
+| Language | n | Precision | Recall | F1 | FPR |
+|---|---:|---:|---:|---:|---:|
+| en | 14 | 1.000 | 0.667 | 0.800 | 0.000 |
+| hi | 15 | 0.857 | 1.000 | 0.923 | 0.111 |
+| hinglish | 5 | 1.000 | 1.000 | 1.000 | 0.000 |
+
+The five hard-negative categories each contain two seed messages and each measured `0/2` false positives. Because these are small, consented-lab seed fixtures, this is a test of the reporting path and not evidence of production multilingual quality. The generated JSON is `evaluation/report.json`.
