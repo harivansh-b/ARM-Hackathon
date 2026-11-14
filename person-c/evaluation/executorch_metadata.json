@@ -1,0 +1,12 @@
+{
+  "status": "PENDING_TARGET_EXPORT",
+  "architecture": "AMD64",
+  "executorch_installed": false,
+  "executorch_version": "unknown",
+  "model_path": null,
+  "model_size_bytes": null,
+  "quantisation": "TBD",
+  "backend": "TBD",
+  "first_token_latency_ms": null,
+  "note": "Fill first_token_latency_ms from the target advisory-model runner; do not estimate it."
+}

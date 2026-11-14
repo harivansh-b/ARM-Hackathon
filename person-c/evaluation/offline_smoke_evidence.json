@@ -1,0 +1,20 @@
+{
+  "status": "HOST_OFFLINE_SMOKE_PASSED",
+  "network_policy": "socket connect and create_connection denied",
+  "detection": {
+    "core_risk_tier": "CRITICAL",
+    "core_reasons": [
+      "Urgency language",
+      "Sensitive credential request",
+      "Impersonation context",
+      "Link present"
+    ],
+    "runtime_decision": "ALERT"
+  },
+  "guidance": {
+    "high_risk_guidance": "Verify independently; do not click links or share credentials.",
+    "benign_candidate_decision": "BENIGN_CANDIDATE",
+    "benign_guidance": "No strong scam signal detected; remain cautious with unexpected requests."
+  },
+  "authorisation": "NOT_APPLICABLE_HOST_SMOKE; authorised lab sign-off still required"
+}

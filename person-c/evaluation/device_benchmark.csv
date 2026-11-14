@@ -1,0 +1,2 @@
+run_id,device,soc,os,core_detector_p50_ms,core_detector_p95_ms,first_token_p50_ms,peak_ram_mb,model_size_mb,temperature_start_c,temperature_end_c,sustained_duration_min,throughput_per_min,executorch_version,quantisation,backend,network_state,evidence_path,status
+TBD,TBD,TBD,TBD,,,,,,,,,,TBD,TBD,TBD,disconnected,,PENDING_AUTHORised_measurement
