@@ -49,6 +49,7 @@ class ExfiltrationDetector:
         self._history: dict[str, collections.deque[int]] = collections.defaultdict(
             lambda: collections.deque(maxlen=100)
         )
+        self._recorded_flows: set[str] = set()
 
     def is_off_hours(self, ts: float) -> bool:
         dt = datetime.datetime.fromtimestamp(ts, tz=datetime.timezone.utc)
@@ -69,7 +70,9 @@ class ExfiltrationDetector:
 
         # Only evaluate flows with appreciable outbound data
         if bytes_out < self.min_volume_bytes and len(history) >= self.min_baseline_samples:
-            history.append(bytes_out)
+            if flow.flow_id not in self._recorded_flows:
+                history.append(bytes_out)
+                self._recorded_flows.add(flow.flow_id)
             return None
 
         # Check baseline z-score
@@ -85,12 +88,21 @@ class ExfiltrationDetector:
                         f"Outbound transfer spike: {bytes_out:,} bytes (z-score {zscore:.1f} vs MAD baseline {med:,.0f} B)"
                     )
                     score += 0.50
-        elif bytes_out >= 500_000:
-            # Cold start but very large volume (>500KB in isolated VM)
+            elif bytes_out >= (med * 5.0) and bytes_out >= self.min_volume_bytes:
+                # If mad is 0 because all historical values are identical, large multiple triggers alert
+                zscore = (bytes_out - med) / (med + 1.0)
+                reasons.append(
+                    f"Outbound transfer spike: {bytes_out:,} bytes ({bytes_out/max(1.0, med):.1f}x MAD baseline {med:,.0f} B)"
+                )
+                score += 0.50
+        elif bytes_out >= 100_000:
+            # Cold start but very large volume (>100KB in isolated VM)
             reasons.append(f"High-volume outbound transfer: {bytes_out:,} bytes with no prior baseline")
             score += 0.40
 
-        history.append(bytes_out)
+        if flow.flow_id not in self._recorded_flows:
+            history.append(bytes_out)
+            self._recorded_flows.add(flow.flow_id)
 
         # Check asymmetry (upload >> download)
         if flow.bytes_resp > 0:

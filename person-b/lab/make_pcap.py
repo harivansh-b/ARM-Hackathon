@@ -149,18 +149,24 @@ def generate_all_scenario_pcaps(output_dir: Path | str) -> dict[str, Path]:
     exfil_pcap = out / "exfil_spike.pcap"
     with PcapWriter(exfil_pcap) as w:
         t = 4000.0
-        # 5 normal small flows ~4KB
-        for i in range(5):
+        # 6 normal small flows ~5KB each, with FIN closure
+        for i in range(6):
             t += 1.0
-            w.write_packet(make_eth_ip_tcp("10.77.0.1", "198.51.100.99", 52000 + i, 443, TCP_SYN), ts=t)
+            src_p = 52000 + i
+            w.write_packet(make_eth_ip_tcp("10.77.0.1", "198.51.100.99", src_p, 443, TCP_SYN), ts=t)
             t += 0.01
-            w.write_packet(make_eth_ip_tcp("10.77.0.1", "198.51.100.99", 52000 + i, 443, TCP_ACK, b"X" * 1000), ts=t)
-        # Exfil spike: large 200KB chunk burst
-        t += 2.0
-        w.write_packet(make_eth_ip_tcp("10.77.0.1", "198.51.100.99", 53000, 443, TCP_SYN), ts=t)
+            w.write_packet(make_eth_ip_tcp("10.77.0.1", "198.51.100.99", src_p, 443, TCP_ACK, b"X" * (5000 + i * 200)), ts=t)
+            t += 0.01
+            w.write_packet(make_eth_ip_tcp("10.77.0.1", "198.51.100.99", src_p, 443, TCP_FIN | TCP_ACK), ts=t)
+        # Exfil spike: large 200KB chunk burst to 198.51.100.99
+        t += 5.0
+        spike_port = 53000
+        w.write_packet(make_eth_ip_tcp("10.77.0.1", "198.51.100.99", spike_port, 443, TCP_SYN), ts=t)
         for chunk in range(50):
             t += 0.005
-            w.write_packet(make_eth_ip_tcp("10.77.0.1", "198.51.100.99", 53000, 443, TCP_ACK, b"E" * 1400), ts=t)
+            w.write_packet(make_eth_ip_tcp("10.77.0.1", "198.51.100.99", spike_port, 443, TCP_ACK, b"E" * 3000), ts=t)
+        t += 0.01
+        w.write_packet(make_eth_ip_tcp("10.77.0.1", "198.51.100.99", spike_port, 443, TCP_FIN | TCP_ACK), ts=t)
     generated["exfil_spike"] = exfil_pcap
 
     # 5. Benign Linux Background PCAP
