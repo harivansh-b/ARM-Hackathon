@@ -1,0 +1,42 @@
+{
+  "time": "2026-11-15 23:15:29",
+  "machine": "x86_64",
+  "kernel": "7.3.4-1-cachyos",
+  "os": "\"CachyOS\"",
+  "python": "3.14.10",
+  "cpus": 16,
+  "mem_total_kb": "15958800",
+  "virtualised": "container-other",
+  "cpu_temp_c": 61.0,
+  "executorch_commit": "SET ME",
+  "model": "SET ME",
+  "quantisation": "SET ME",
+  "environment_label": "ARM64 Linux VM under QEMU",
+  "component": "Person B (Network Sensor)",
+  "benchmark_results": {
+    "dnswire": {
+      "iterations": 20000,
+      "packet_size_bytes": 45,
+      "parse_qps": 213033.0,
+      "parse_mb_s": 9.14,
+      "build_qps": 418191.0
+    },
+    "flows": {
+      "iterations": 25000,
+      "elapsed_sec": 0.0367,
+      "packets_per_second": 681771.0,
+      "active_flows": 100
+    },
+    "sentinel_latency": {
+      "total": 500,
+      "success": 500,
+      "failed": 0,
+      "fallback_raw": 0,
+      "success_rate_pct": 100.0,
+      "median_ms": 0.35,
+      "p95_ms": 0.55,
+      "p99_ms": 0.67
+    },
+    "peak_rss_kb": 138528
+  }
+}

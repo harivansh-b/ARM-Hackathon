@@ -1,0 +1,47 @@
+{
+  "timestamp": "2026-11-15 23:16:14",
+  "environment": "ARM64 Linux VM under QEMU",
+  "benign_trace": {
+    "hours_simulated": 24.0,
+    "ntp_cycles": 84,
+    "apt_cycles": 2,
+    "total_suppressed_benign": 166,
+    "false_alerts_count": 0,
+    "false_alerts_per_hour": 0.0
+  },
+  "scenarios": {
+    "matrix": [
+      {
+        "scenario": "smishing_c2_chain",
+        "expected_event": "BEACON",
+        "alerts_count": 1,
+        "passed": true
+      },
+      {
+        "scenario": "dns_tunnel",
+        "expected_event": "DNS_TUNNEL",
+        "alerts_count": 2,
+        "passed": true
+      },
+      {
+        "scenario": "port_scan",
+        "expected_event": "PORT_SCAN",
+        "alerts_count": 1,
+        "passed": true
+      },
+      {
+        "scenario": "exfil_spike",
+        "expected_event": "EXFILTRATION",
+        "alerts_count": 2,
+        "passed": true
+      },
+      {
+        "scenario": "benign_linux",
+        "expected_event": "NONE",
+        "alerts_count": 0,
+        "passed": true
+      }
+    ],
+    "all_passed": true
+  }
+}

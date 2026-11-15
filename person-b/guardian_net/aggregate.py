@@ -56,17 +56,15 @@ def is_benign_system_traffic(entity_type: str, entity_value: str, port: int | No
     if port in BENIGN_PORTS:
         return True
 
-    if entity_type == "DOMAIN":
-        if val in BENIGN_DOMAINS:
-            return True
-        if any(val.endswith(suffix) for suffix in BENIGN_DOMAIN_SUFFIXES):
-            return True
+    # Check benign domains across all entity types
+    if val in BENIGN_DOMAINS or any(val.endswith(suffix) for suffix in BENIGN_DOMAIN_SUFFIXES):
+        return True
 
-    elif entity_type == "IP":
+    if entity_type == "IP" or any(c.isdigit() for c in val):
         if val in MULTICAST_IPS or val.startswith("127.") or val == "::1":
             return True
 
-    elif entity_type == "FLOW":
+    if entity_type == "FLOW":
         if any(f":{p}->" in val or f"->{p}:" in val or val.endswith(f":{p}") for p in BENIGN_PORTS):
             return True
         for m_ip in MULTICAST_IPS:
