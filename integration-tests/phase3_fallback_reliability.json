@@ -1,0 +1,34 @@
+{
+  "benchmark": "Guardian Phase 3C - Fallback Reliability",
+  "timestamp_utc": "2026-11-21T07:44:35.626760+00:00",
+  "environment": "ARM64 Linux VM under QEMU on Apple silicon",
+  "total_tests": 3,
+  "passed": 3,
+  "failed": 0,
+  "results": [
+    {
+      "test": "llama_disabled",
+      "elapsed_seconds": 1.7500001376902219e-06,
+      "source": "template",
+      "verifier": "llm disabled",
+      "fallback_correct": true,
+      "explanation": "Link present. Do not click links."
+    },
+    {
+      "test": "process_failure",
+      "elapsed_seconds": 0.003103281999756291,
+      "source": "template",
+      "verifier": "empty_or_overlong",
+      "fallback_correct": true,
+      "explanation": "Link present. Do not click links."
+    },
+    {
+      "test": "llama_timeout",
+      "elapsed_seconds": 0.20700322299990148,
+      "source": "template",
+      "verifier": "llm error: TimeoutExpired",
+      "fallback_correct": true,
+      "explanation": "Link present. Do not click links."
+    }
+  ]
+}

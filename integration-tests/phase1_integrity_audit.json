@@ -1,0 +1,174 @@
+{
+  "phase": 1,
+  "purpose": "Frozen SMS classifier evaluation and partition integrity audit",
+  "artifact": "artifacts/sms.json",
+  "partition_counts": {
+    "train": 21754,
+    "calibration": 5480,
+    "held_out_test": 6866
+  },
+  "exact_text_overlap": {
+    "normalization": "strip + casefold",
+    "train_test": 0,
+    "calibration_test": 0,
+    "train_calibration": 0
+  },
+  "unique_text_counts": {
+    "train": 21502,
+    "calibration": 5412,
+    "test": 6756
+  },
+  "campaign_diagnostic": {
+    "total_records": 34100,
+    "unique_campaigns": 32776,
+    "single_record_campaigns": 32096,
+    "campaigns_2_to_5_records": 649,
+    "campaigns_over_5_records": 31
+  },
+  "embedded_model_evaluation": {
+    "count": 6866,
+    "tp": 5823,
+    "tn": 981,
+    "fp": 0,
+    "fn": 62,
+    "precision": 1.0,
+    "recall": 0.9894647408666101,
+    "f1": 0.9947044755722583,
+    "false_positive_rate": 0.0,
+    "pr_auc": 0.9999015769196259,
+    "train_count": 21754,
+    "calibration_count": 5480,
+    "test_campaign_count": 6564,
+    "test_campaigns_preview": [
+      "legacy:0035e3894973d49b",
+      "legacy:00c59909bca41eea",
+      "legacy:00eb7a5e50c4dc51",
+      "legacy:016b86c2d447c548",
+      "legacy:01777f0cb0ab30c6",
+      "legacy:01f5b227199b70d6",
+      "legacy:02ab902a31b7a143",
+      "legacy:031ef531ab5920f4",
+      "legacy:035732850b96342b",
+      "legacy:04185900abd2ee24"
+    ],
+    "dataset_labels": {
+      "train": {
+        "0": 3075,
+        "1": 18679
+      },
+      "test": {
+        "0": 981,
+        "1": 5885
+      }
+    }
+  },
+  "corpus_evaluation": {
+    "artifact": "artifacts/sms.json",
+    "threshold": 0.8195140068721829,
+    "records": 34110,
+    "per_language": {
+      "en": {
+        "count": 5,
+        "tp": 0,
+        "tn": 4,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "false_positive_rate": 0.2
+      },
+      "hi": {
+        "count": 5,
+        "tp": 0,
+        "tn": 5,
+        "fp": 0,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "false_positive_rate": 0.0
+      },
+      "unknown": {
+        "count": 34100,
+        "tp": 29182,
+        "tn": 4827,
+        "fp": 0,
+        "fn": 91,
+        "precision": 1.0,
+        "recall": 0.9968913333105592,
+        "f1": 0.9984432469420922,
+        "false_positive_rate": 0.0
+      }
+    },
+    "hard_negatives": {
+      "legitimate_bank": {
+        "count": 2,
+        "tp": 0,
+        "tn": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "false_positive_rate": 0.0
+      },
+      "legitimate_delivery": {
+        "count": 2,
+        "tp": 0,
+        "tn": 1,
+        "fp": 1,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "false_positive_rate": 0.5
+      },
+      "legitimate_otp": {
+        "count": 2,
+        "tp": 0,
+        "tn": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "false_positive_rate": 0.0
+      },
+      "legitimate_tax": {
+        "count": 2,
+        "tp": 0,
+        "tn": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "false_positive_rate": 0.0
+      },
+      "legitimate_upi": {
+        "count": 2,
+        "tp": 0,
+        "tn": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "false_positive_rate": 0.0
+      }
+    },
+    "time_ordered": {
+      "status": "available only when collection_date is present",
+      "records_with_date": 10,
+      "note": "Do not call this independent or prospective until collection dates are verified."
+    }
+  },
+  "limitations": [
+    "Exact-text cross-partition overlap was zero.",
+    "Near-duplicate leakage has not been checked.",
+    "Campaign IDs predominantly contain single records.",
+    "Dataset source and label bias remain.",
+    "The embedded held-out result is not independent external validation."
+  ]
+}

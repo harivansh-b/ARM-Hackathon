@@ -1,0 +1,68 @@
+{
+  "benchmark": "Guardian Phase 3 - Advisor",
+  "timestamp_utc": "2026-11-21T07:35:50.684243+00:00",
+  "environment": "ARM64 Linux VM under QEMU on Apple silicon",
+  "configuration": {
+    "runs": 3,
+    "temperature": 0,
+    "sequence_length": 512,
+    "max_new_tokens": 128,
+    "input": "Existing ALERT test fixture EV",
+    "model_runner": "ExecuTorch llama_main"
+  },
+  "summary": {
+    "mean_explain_seconds": 3.1838827543332022,
+    "median_explain_seconds": 2.970808757999748,
+    "min_explain_seconds": 2.963201187999857,
+    "max_explain_seconds": 3.617638317000001,
+    "llama_accepted": 3,
+    "template_fallbacks": 0,
+    "acceptance_rate_percent": 100.0,
+    "child_peak_rss_kb": 1667196,
+    "python_peak_rss_kb": 18176
+  },
+  "runs": [
+    {
+      "run": 1,
+      "total_explain_seconds": 3.617638317000001,
+      "llm_generation_seconds": 3.62,
+      "source": "llama",
+      "verifier": "ok",
+      "llm_stats": {
+        "prompt_tokens": 125,
+        "generated_tokens": 70,
+        "ttft_ms": 392.0,
+        "decode_tok_s": 49.4
+      },
+      "explanation": "Here is a 2-sentence explanation of the SMS scam warning:\n\nThe SMS warning indicates that the decision is to alert the user, the risk is high, and the link present in the message is likely to be malicious. The warning advises the user not to open the link, but does not provide any additional information or reassurance to the user."
+    },
+    {
+      "run": 2,
+      "total_explain_seconds": 2.970808757999748,
+      "llm_generation_seconds": 2.97,
+      "source": "llama",
+      "verifier": "ok",
+      "llm_stats": {
+        "prompt_tokens": 125,
+        "generated_tokens": 70,
+        "ttft_ms": 353.0,
+        "decode_tok_s": 46.42
+      },
+      "explanation": "Here is a 2-sentence explanation of the SMS scam warning:\n\nThe SMS warning indicates that the decision is to alert the user, the risk is high, and the link present in the message is likely to be malicious. The warning advises the user not to open the link, but does not provide any additional information or reassurance to the user."
+    },
+    {
+      "run": 3,
+      "total_explain_seconds": 2.963201187999857,
+      "llm_generation_seconds": 2.96,
+      "source": "llama",
+      "verifier": "ok",
+      "llm_stats": {
+        "prompt_tokens": 125,
+        "generated_tokens": 70,
+        "ttft_ms": 392.0,
+        "decode_tok_s": 48.85
+      },
+      "explanation": "Here is a 2-sentence explanation of the SMS scam warning:\n\nThe SMS warning indicates that the decision is to alert the user, the risk is high, and the link present in the message is likely to be malicious. The warning advises the user not to open the link, but does not provide any additional information or reassurance to the user."
+    }
+  ]
+}

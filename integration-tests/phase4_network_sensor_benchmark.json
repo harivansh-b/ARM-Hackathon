@@ -1,0 +1,115 @@
+{
+  "phase": 4,
+  "name": "Person B Network Sensor Baseline",
+  "recorded_at": "2026-11-21T07:56:19.650041+00:00",
+  "environment": {
+    "machine": "aarch64",
+    "system": "Linux",
+    "kernel": "6.8.0-149-generic",
+    "python": "3.12.3",
+    "cpu_count": 4,
+    "virtualization": "QEMU",
+    "environment_label": "AArch64 Linux VM under QEMU",
+    "physical_device": false
+  },
+  "functional_validation": {
+    "unit_tests": {
+      "passed": 34,
+      "failed": 0,
+      "result": "PASS"
+    },
+    "pcap_scenarios": {
+      "passed": 5,
+      "total": 5,
+      "failed": 0,
+      "results": [
+        {
+          "scenario": "smishing_c2_chain",
+          "expected": "BEACON",
+          "alerts": 1,
+          "result": "PASS"
+        },
+        {
+          "scenario": "dns_tunnel",
+          "expected": "DNS_TUNNEL",
+          "alerts": 2,
+          "result": "PASS"
+        },
+        {
+          "scenario": "port_scan",
+          "expected": "PORT_SCAN",
+          "alerts": 1,
+          "result": "PASS"
+        },
+        {
+          "scenario": "exfil_spike",
+          "expected": "EXFILTRATION",
+          "alerts": 2,
+          "result": "PASS"
+        },
+        {
+          "scenario": "benign_linux",
+          "expected": "ANY",
+          "alerts": 0,
+          "result": "PASS"
+        }
+      ],
+      "benign_false_alerts": 0
+    }
+  },
+  "performance_benchmarks": {
+    "method": "Individual benchmark functions; existing results.json was not overwritten.",
+    "dns_wire": {
+      "iterations": 20000,
+      "packet_size_bytes": 45,
+      "parse_qps": 333987.0,
+      "parse_mb_s": 14.33,
+      "build_qps": 585220.0
+    },
+    "flow_table": {
+      "iterations": 25000,
+      "elapsed_sec": 0.0303,
+      "packets_per_second": 826229.0,
+      "active_flows": 100
+    },
+    "dns_sentinel": {
+      "total": 500,
+      "success": 500,
+      "failed": 0,
+      "fallback_raw": 0,
+      "success_rate_pct": 100.0,
+      "median_ms": 0.07,
+      "p95_ms": 0.11,
+      "p99_ms": 0.13
+    },
+    "peak_rss_kb": 19456
+  },
+  "offline_validation": {
+    "script": "person-b/eval/offline_proof.sh",
+    "namespace": "guardian_offline",
+    "egress_probe": {
+      "destination": "1.1.1.1:53",
+      "protocol": "IPv4 UDP",
+      "result": "BLOCKED",
+      "error": "Errno 101: Network is unreachable"
+    },
+    "scenarios_inside_namespace": {
+      "passed": 5,
+      "total": 5,
+      "result": "PASS"
+    },
+    "namespace_cleanup": "PASS"
+  },
+  "overall_assessment": {
+    "result": "PASS",
+    "summary": "Person B unit tests, PCAP scenarios, microbenchmarks and offline namespace validation passed in the tested AArch64 QEMU VM.",
+    "limitations": [
+      "Measurements are from a QEMU VM, not physical ARM hardware.",
+      "Flow benchmark exercised 100 active flows.",
+      "DNS sentinel latency is a local loopback measurement, not WAN resolver latency.",
+      "Offline proof tested an IPv4 UDP egress probe; it does not prove every protocol or runtime path is isolated.",
+      "PCAP replay does not establish live-capture accuracy on arbitrary traffic.",
+      "Zero benign alerts applies only to the supplied benign scenario."
+    ]
+  }
+}
