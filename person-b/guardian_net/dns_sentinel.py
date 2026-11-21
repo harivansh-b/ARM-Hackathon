@@ -359,6 +359,18 @@ class DNSSentinel:
                 logger.debug(f"Inspector hook error: {e}")
 
         if custom_evidence:
+            # Preserve detector evidence while attaching DNS response context needed
+            # for downstream DNS -> CONNECTION correlation.
+            metadata = custom_evidence.setdefault("metadata", {})
+            metadata.update({
+                "qtype": qtype,
+                "rcode": rcode,
+                "resolved_ips": resolved_ips,
+                "cnames": cnames,
+                "latency_ms": round(latency_ms, 2),
+                "client_ip": client_ip,
+                "tc": response.is_tc if response else False,
+            })
             append_evidence_jsonl(custom_evidence, self.evidence_file)
             return
 

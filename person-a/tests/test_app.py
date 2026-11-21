@@ -49,6 +49,103 @@ class Tests(unittest.TestCase):
         self.assertEqual(out["source"], "template")
         self.assertEqual(explain(EV, None)["source"], "template")
 
+    def test_network_evidence_cannot_change_benign_verdict(self):
+        import time
+        from guardian_models.dataset import load_jsonl
+        from guardian_models.runtime import SMSRuntime
+        from guardian_models.sms_model import LinearSMSModel
+        from guardian_app.scan import scan
 
+        data = load_jsonl(ROOT / "person-c/data/sms_multilingual.jsonl")
+        runtime = SMSRuntime(
+            LinearSMSModel(epochs=6).fit([(d.text, d.label) for d in data]),
+            threshold=0.5,
+        )
+
+        msg = [{
+            "id": "isolation-1",
+            "text": "Hey, are we meeting for lunch today?",
+            "sender": "+9190",
+        }]
+
+        now = int(time.time())
+        net_records = [{
+            "evidence_id": "DNS-ISOLATION",
+            "source": "DNS",
+            "event_type": "DNS_TUNNEL",
+            "timestamp": now,
+            "entity": {"type": "DOMAIN", "value": "suspicious.example"},
+            "risk_tier": "CRITICAL",
+            "score": 1.0,
+            "reasons": ["Synthetic suspicious DNS"],
+            "metadata": {},
+        }]
+
+        baseline = scan(msg, runtime, None)[0]
+        with_network = scan(msg, runtime, None, net_records=net_records)[0]
+
+        self.assertEqual(baseline["state"], with_network["state"])
+        self.assertEqual(baseline["score"], with_network["score"])
+        self.assertEqual(baseline["actions"], with_network["actions"])
+        self.assertNotIn(with_network["state"], ("ALERT", "REVIEW"))
+
+    def test_pipeline_with_full_network_storyline(self):
+        import time
+        from guardian_models.dataset import load_jsonl
+        from guardian_models.runtime import SMSRuntime
+        from guardian_models.sms_model import LinearSMSModel
+        from guardian_app.scan import scan
+
+        data = load_jsonl(ROOT / "person-c/data/sms_multilingual.jsonl")
+        runtime = SMSRuntime(
+            LinearSMSModel(epochs=6).fit([(d.text, d.label) for d in data]),
+            threshold=0.5,
+        )
+
+        now = int(time.time())
+        msgs = [{
+            "id": "integration-1",
+            "text": "Your account is suspended. Verify now at http://bad-bank.top/login and send OTP",
+            "sender": "+9190",
+        }]
+
+        net_records = [
+            {
+                "evidence_id": "DNS-1",
+                "source": "DNS",
+                "event_type": "DNS_TUNNEL",
+                "timestamp": now,
+                "entity": {"type": "DOMAIN", "value": "bad-bank.top"},
+                "risk_tier": "HIGH",
+                "score": 0.9,
+                "reasons": ["Suspicious DNS"],
+                "metadata": {"resolved_ips": ["10.77.0.2"]},
+            },
+            {
+                "evidence_id": "CONN-1",
+                "source": "CONNECTION",
+                "event_type": "BEACON",
+                "timestamp": now,
+                "entity": {"type": "IP", "value": "10.77.0.2"},
+                "risk_tier": "HIGH",
+                "score": 0.9,
+                "reasons": ["Suspicious connection"],
+                "metadata": {},
+            },
+        ]
+
+        out = scan(msgs, runtime, None, net_records=net_records)[0]
+
+        self.assertEqual(out["state"], "ALERT")
+        self.assertTrue(out["network_linked"])
+
+        storyline = next(
+            s for s in out["network_storylines"]
+            if s["chain_length"] == 4
+        )
+        self.assertEqual(
+            storyline["sources"],
+            ["SMS", "URL", "DNS", "CONNECTION"],
+        )
 if __name__ == "__main__":
     unittest.main()
