@@ -1,0 +1,79 @@
+{
+  "pipeline": "network_capture_detection_llm_verifier",
+  "input_pcap": "/home/dev/ARM-Hackathon/person-b/eval/scenarios/smishing_c2_chain.pcap",
+  "generated_at": "2026-11-21T13:20:04Z",
+  "alert_count": 1,
+  "alerts": [
+    {
+      "evidence": {
+        "evidence_id": "CE48350A35237",
+        "source": "CONNECTION",
+        "event_type": "BEACON",
+        "timestamp": 1025,
+        "entity": {
+          "type": "IP",
+          "value": "10.77.0.2"
+        },
+        "risk_tier": "WARN",
+        "score": 0.55,
+        "reasons": [
+          "Highly rigid periodic beaconing: mean interval 5.0s (CV=0.000)"
+        ],
+        "related_ids": [
+          "CE48350A35237"
+        ],
+        "metadata": {
+          "first_seen": 1025,
+          "last_seen": 1025,
+          "aggregated_events_count": 1,
+          "suppressed_duplicates": 0
+        }
+      },
+      "llm_raw": "The alert is suspicious because the entity is an IP address (10.77.0.2) and has a high risk of being a beaconing entity. The beaconing entity is characterized by a mean interval of 5.0 seconds (CV=0.000), which is highly indicative of a periodic beaconing pattern. The IP address is also highly rigid, suggesting that the entity is not dynamically changing.\nRECOMMENDATION:\nDo not contact, open, execute, or interact with the detected entity. Instead, investigate the IP address to determine its purpose and potential threat. If the IP address is found to be a beaconing",
+      "explanation": "Observed network anomaly: BEACON. Risk level: WARN. Treat the activity cautiously and investigate using the recorded evidence.",
+      "explanation_source": "template",
+      "verifier": {
+        "accepted": false,
+        "reason": "unsafe_reassurance_or_action_language"
+      },
+      "llama_metrics": {
+        "attempted": true,
+        "wall_time_s": 5.489,
+        "return_code": 0,
+        "observer_metrics": {
+          "prompt_tokens": 219,
+          "generated_tokens": 127,
+          "ttft_ms": 649.0,
+          "decode_tok_s": 45.54
+        },
+        "child_peak_rss_mb": 1628.0
+      }
+    }
+  ],
+  "hardware_runtime_metrics": {
+    "platform": "Linux-6.8.0-149-generic-aarch64-with-glibc2.39",
+    "architecture": "aarch64",
+    "processor": "aarch64",
+    "cpu_count_logical": 4,
+    "ram_total_mb": 7919.1,
+    "cpu_temperature_c": null,
+    "python_version": "3.12.3",
+    "child_peak_rss_mb": 1628.0
+  },
+  "llama_summary": {
+    "configured": true,
+    "attempts": 1,
+    "accepted": 0,
+    "wall_times_s": [
+      5.489
+    ],
+    "ttft_ms": [
+      649.0
+    ],
+    "decode_tok_s": [
+      45.54
+    ],
+    "note": "ExecuTorch observer TTFT/decode fields only appear if the runner emits PyTorchObserver metrics. Child peak RSS and wall time are measured; CPU temperature is best-effort."
+  },
+  "note": "PCAP replay, not live capture. Rule-based verifier screening is not proof of factual correctness."
+}
