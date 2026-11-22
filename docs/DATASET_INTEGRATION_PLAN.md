@@ -13,7 +13,8 @@ remains the main corpus. `person-c/data/indian_hard_negatives.jsonl` remains
 evaluation-only so its results stay meaningful.
 
 The network benchmark candidates are not silently mixed into the existing
-rule-based detector. They are reserved for an adapter-based evaluation stage:
+rule-based detector. They now have dependency-free normalization/evaluation
+entry points, while remaining reserved for an adapter-based evaluation stage:
 
 1. CIC-Bell-DNS-EXF-2021 for DNS exfiltration and tunnelling thresholds.
 2. ISCX-URL2016 for URL lexical/obfuscation scoring.
@@ -59,6 +60,30 @@ labelled benign set.
 3. Add URL and network adapters as separate changes with their own fixtures
    and reports.
 4. Add frozen threat-intelligence snapshots only with a manifest and expiry.
+
+## Local adapter commands
+
+URL benchmark evaluation:
+
+```text
+python person-c/tools/evaluate_url_benchmark.py \
+    path/to/ISCX-URL2016.csv \
+    --output integration-tests/iscx_url2016_guardian.json
+```
+
+Network benchmark normalization:
+
+```text
+python person-b/eval/prepare_network_benchmark.py \
+    path/to/UNSW_NB15_training-set.csv \
+    integration-tests/unsw_nb15.normalized.jsonl \
+    --dataset unsw-nb15 \
+    --manifest integration-tests/unsw_nb15.manifest.json
+```
+
+The commands never fetch data, open URLs, or copy raw benchmark files into the
+repository. The downloaded files and their licence/provenance manifests stay
+local to the evaluation environment.
 
 ## Current measured SMS result
 

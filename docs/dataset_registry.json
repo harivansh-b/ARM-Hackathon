@@ -33,28 +33,28 @@
     {
       "id": "iscx-url2016",
       "role": "url_benchmark",
-      "status": "planned",
+      "status": "adapter_implemented_benchmark_pending",
       "source": "https://www.unb.ca/cic/datasets/url-2016.html",
       "notes": "Use through a local, licensed snapshot and report source age."
     },
     {
       "id": "cic-bell-dns-exf-2021",
       "role": "dns_benchmark",
-      "status": "planned",
+      "status": "adapter_implemented_benchmark_pending",
       "source": "https://www.unb.ca/cic/datasets/dns-exf-2021.html",
       "notes": "Feature-compatible candidate for DNS exfiltration evaluation."
     },
     {
       "id": "cicids2017",
       "role": "network_external_validation",
-      "status": "planned",
+      "status": "adapter_implemented_benchmark_pending",
       "source": "https://www.unb.ca/cic/datasets/ids-2017.html",
       "notes": "Use with a feature adapter; do not merge raw flow columns into Guardian evidence."
     },
     {
       "id": "unsw-nb15",
       "role": "network_cross_dataset_validation",
-      "status": "planned",
+      "status": "adapter_implemented_benchmark_pending",
       "source": "https://research.unsw.edu.au/projects/unsw-nb15-dataset",
       "notes": "Use the official train/test split and preserve attack-family labels."
     },

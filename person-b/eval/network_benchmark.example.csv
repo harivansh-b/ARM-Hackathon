@@ -1,0 +1,3 @@
+Flow ID,Source IP,Destination IP,Flow Duration,Total Fwd Packets,Label
+demo-1,192.0.2.10,198.51.100.10,1000,4,BENIGN
+demo-2,192.0.2.10,198.51.100.20,20,100,DoS
