@@ -1,0 +1,135 @@
+{
+  "dataset": "cicids2017",
+  "train_records": 75000,
+  "test_records": 25000,
+  "feature_count": 73,
+  "feature_columns": [
+    " ACK Flag Count",
+    " Active Max",
+    " Active Min",
+    " Active Std",
+    " Average Packet Size",
+    " Avg Bwd Segment Size",
+    " Avg Fwd Segment Size",
+    " Bwd Avg Bytes/Bulk",
+    " Bwd Avg Packets/Bulk",
+    " Bwd Header Length",
+    " Bwd IAT Max",
+    " Bwd IAT Mean",
+    " Bwd IAT Min",
+    " Bwd IAT Std",
+    " Bwd PSH Flags",
+    " Bwd Packet Length Mean",
+    " Bwd Packet Length Min",
+    " Bwd Packet Length Std",
+    " Bwd Packets/s",
+    " Bwd URG Flags",
+    " CWE Flag Count",
+    " Destination Port",
+    " Down/Up Ratio",
+    " ECE Flag Count",
+    " Flow Duration",
+    " Flow IAT Max",
+    " Flow IAT Mean",
+    " Flow IAT Min",
+    " Flow IAT Std",
+    " Flow Packets/s",
+    " Fwd Avg Bulk Rate",
+    " Fwd Avg Packets/Bulk",
+    " Fwd Header Length",
+    " Fwd IAT Max",
+    " Fwd IAT Mean",
+    " Fwd IAT Min",
+    " Fwd IAT Std",
+    " Fwd Packet Length Max",
+    " Fwd Packet Length Mean",
+    " Fwd Packet Length Min",
+    " Fwd Packet Length Std",
+    " Fwd URG Flags",
+    " Init_Win_bytes_backward",
+    " Max Packet Length",
+    " Min Packet Length",
+    " PSH Flag Count",
+    " Packet Length Mean",
+    " Packet Length Std",
+    " Packet Length Variance",
+    " RST Flag Count",
+    " SYN Flag Count",
+    " Subflow Bwd Bytes",
+    " Subflow Bwd Packets",
+    " Subflow Fwd Bytes",
+    " Total Backward Packets",
+    " Total Fwd Packets",
+    " Total Length of Bwd Packets",
+    " URG Flag Count",
+    " act_data_pkt_fwd",
+    " min_seg_size_forward",
+    "Active Mean",
+    "Bwd Avg Bulk Rate",
+    "Bwd IAT Total",
+    "Bwd Packet Length Max",
+    "FIN Flag Count",
+    "Flow Bytes/s",
+    "Fwd Avg Bytes/Bulk",
+    "Fwd IAT Total",
+    "Fwd PSH Flags",
+    "Fwd Packets/s",
+    "Init_Win_bytes_forward",
+    "Subflow Fwd Packets",
+    "Total Length of Fwd Packets"
+  ],
+  "label_counts": {
+    "BENIGN": 21878,
+    "PortScan": 3122
+  },
+  "by_label": {
+    "BENIGN": {
+      "count": 21878,
+      "attacks_detected": 0,
+      "missed": 0
+    },
+    "PortScan": {
+      "count": 3122,
+      "attacks_detected": 3119,
+      "missed": 3
+    }
+  },
+  "confusion_matrix": [
+    [
+      21748,
+      130
+    ],
+    [
+      3,
+      3119
+    ]
+  ],
+  "classification_report": {
+    "0": {
+      "precision": 0.9998620753068824,
+      "recall": 0.9940579577657921,
+      "f1-score": 0.996951568910587,
+      "support": 21878.0
+    },
+    "1": {
+      "precision": 0.9599876885195445,
+      "recall": 0.9990390775144138,
+      "f1-score": 0.9791241563333857,
+      "support": 3122.0
+    },
+    "accuracy": 0.99468,
+    "macro avg": {
+      "precision": 0.9799248819132135,
+      "recall": 0.996548517640103,
+      "f1-score": 0.9880378626219863,
+      "support": 25000.0
+    },
+    "weighted avg": {
+      "precision": 0.9948825618848797,
+      "recall": 0.99468,
+      "f1-score": 0.994725281627946,
+      "support": 25000.0
+    }
+  },
+  "note": "Reference benchmark only; scores do not represent live Guardian runtime accuracy."
+}

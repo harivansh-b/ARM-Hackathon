@@ -93,7 +93,43 @@ All measurements recorded in `bench/results.json` and `eval/eval_report.json`.
 
 Run all commands from the repository root.
 
-### 1. Run Unit Tests (34 tests)
+### Dataset-backed validation
+
+The network evaluation workstream now includes normalized reference reports
+for UNSW-NB15 and CICIDS2017 DDoS/PortScan subsets. Results are benchmark-only
+because public flow features are not identical to live packet windows:
+
+| Benchmark | Attack recall | Benign recall | Macro F1 |
+|---|---:|---:|---:|
+| UNSW-NB15 | 84.68% | 67.19% | 76.18% |
+| CICIDS2017 DDoS | 99.92% | 99.78% | 99.86% |
+| CICIDS2017 PortScan | 99.90% | 99.41% | 98.80% |
+
+The raw files are local and gitignored. Provenance is recorded in
+`../integration-tests/external_dataset_manifest.json`.
+
+The DNS reference model is opt-in:
+
+```bash
+python3 person-b/guardian_net/cli.py replay \
+    --pcap person-b/eval/scenarios/dns_tunnel.pcap \
+    --dns-model integration-tests/cic_bell_dns_exf.reference.model.json
+```
+
+The signed OpenPhish domain bundle is also opt-in:
+
+```bash
+python3 person-b/guardian_net/cli.py replay \
+    --pcap person-b/eval/scenarios/dns_tunnel.pcap \
+    --threat-bundle integration-tests/openphish.bundle.json \
+    --bundle-key-file /path/to/bundle-key
+```
+
+The current OpenPhish lookup report matched 300/300 feed URLs and 0/20
+curated benign URLs. PhishTank support is implemented by the same bundle
+builder but awaits an application-key snapshot.
+
+### 1. Run Unit Tests (22 Person B tests in the current validation set)
 
 ```bash
 python3 -m unittest discover -s person-b/tests -v

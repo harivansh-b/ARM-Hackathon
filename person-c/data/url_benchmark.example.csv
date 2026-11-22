@@ -1,0 +1,4 @@
+url,type
+https://example.com/account/notice,benign
+http://secure-bank-verify.example/login,phishing
+http://192.0.2.10/update,malware

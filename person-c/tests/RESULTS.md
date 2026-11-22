@@ -1,6 +1,6 @@
 # Person C Results
 
-Latest local verification run: **2026-11-14** (Asia/Calcutta).
+Latest local verification run: **2026-11-22** (Asia/Calcutta).
 
 ## Requirement checklist
 
@@ -22,7 +22,7 @@ Latest local verification run: **2026-11-14** (Asia/Calcutta).
 
 | Check | Result | Scope |
 |---|---:|---|
-| Python unit tests | **19 passed** | Normalization, detection, training, metrics, runtime safety, verifier, bundle security, evidence linking and hard negatives |
+| Python unit tests | **22 passed** | Person C models, dataset adapters, normalization, detection, training, metrics, runtime safety, verifier, bundle security and evidence linking |
 | Python compilation | **Passed** | All `guardian_models` modules |
 | Scraper syntax check | **Passed** | `tools/scrape_public_sms.js` |
 | Multilingual corpus validation | **Passed** | JSONL schema, label balance and language counts |
@@ -30,6 +30,24 @@ Latest local verification run: **2026-11-14** (Asia/Calcutta).
 | JSONL dataset validation | **4 datasets loaded** | 24 + 10 + 34,100 + 10,271 records |
 | Offline host smoke | **Passed** | Socket connections denied; core detection and guidance remained available |
 | Slide-driven software controls | **Passed** | Verifier/fallback, signed bundle checks and SMS-to-URL evidence linking |
+
+## Dataset integration update
+
+The current branch also contains reproducible reference evaluations for
+UNSW-NB15, CICIDS2017 and a signed OpenPhish offline bundle. These results are
+kept separate from live-runtime accuracy claims:
+
+| Evaluation | Result |
+|---|---|
+| UNSW-NB15 | 84.68% attack recall, 67.19% benign recall, 76.18% macro F1 |
+| CICIDS2017 DDoS | 99.92% attack recall, 99.78% benign recall, 99.86% macro F1 |
+| CICIDS2017 PortScan | 99.90% attack recall, 99.41% benign recall, 98.80% macro F1 |
+| OpenPhish lookup | 300/300 malicious matches, 0/20 curated benign matches |
+| DNS runtime parity | Default and opt-in model paths preserved all local scenario alert counts |
+
+The complete reports are in the repository-level `integration-tests/`
+directory, and dataset provenance is recorded in
+`integration-tests/external_dataset_manifest.json`.
 
 Run the unit tests with:
 

@@ -1,0 +1,78 @@
+{
+  "collection_date": "2026-11-22",
+  "raw_files_are_gitignored": true,
+  "datasets": [
+    {
+      "id": "iscx-url2016-mirror",
+      "local_path": "data/external/ISCX-URL2016_All.csv",
+      "source_url": "https://raw.githubusercontent.com/quickheaven/scs-3253-machine-learning/master/datasets/ISCX-URL2016_All.csv",
+      "upstream_reference": "https://www.unb.ca/cic/datasets/url-2016.html",
+      "bytes": 11661240,
+      "sha256": "39bd96b0c4738daff7be9db7fb9561512afa5599ab34484aa5b7e70c1c55034c",
+      "records": 36707,
+      "classes": ["benign", "defacement", "malware", "phishing", "spam"],
+      "role": "benchmark_only",
+      "notes": "Feature CSV; no raw URL string column. Mirror provenance must be disclosed."
+    },
+    {
+      "id": "cic-bell-dns-exf-2021-zenodo",
+      "local_path": "data/external/CIC-Bell-DNS-EXF-2021.csv",
+      "source_url": "https://zenodo.org/records/18139853/files/CIC-Bell-DNS-EXF-2021.csv?download=1",
+      "upstream_reference": "https://www.unb.ca/cic/datasets/dns-exf-2021.html",
+      "bytes": 46770313,
+      "sha256": "62ec5d632c9e665851c551487d6d1e2afbc7f8f55b62cac4649999dadafc89de",
+      "role": "benchmark_only",
+      "notes": "Feature-based DNS benchmark; raw PCAP archive was not downloaded."
+    },
+    {
+      "id": "unsw-nb15-training-mirror",
+      "local_path": "data/external/network/UNSW_NB15_training-set.csv",
+      "source_url": "https://huggingface.co/datasets/Mouwiya/UNSW-NB15/resolve/main/UNSW_NB15_training-set.csv",
+      "upstream_reference": "https://research.unsw.edu.au/projects/unsw-nb15-dataset",
+      "bytes": 32293018,
+      "sha256": "bec7dd5ec88dc2a0ccc7a07879d338395ed7421750f675fd0339e07dfe0648fa",
+      "records": 175341,
+      "role": "cross_dataset_validation",
+      "notes": "Pinned public mirror of the official-shaped training partition; raw data is gitignored."
+    },
+    {
+      "id": "unsw-nb15-testing-mirror",
+      "local_path": "data/external/network/UNSW_NB15_testing-set.csv",
+      "source_url": "https://huggingface.co/datasets/Mouwiya/UNSW-NB15-small/resolve/main/UNSW_NB15_testing-set.csv",
+      "upstream_reference": "https://research.unsw.edu.au/projects/unsw-nb15-dataset",
+      "bytes": 15380800,
+      "sha256": "734fe6642edf758f7c94d7d9149426b49d202fe8e7bf0bef47392489c3c0a559",
+      "records": 82332,
+      "role": "cross_dataset_validation",
+      "notes": "Pinned public mirror of the official-shaped testing partition; raw data is gitignored."
+    },
+    {
+      "id": "cicids2017-ddos-portscan-mirror",
+      "local_paths": [
+        "data/external/network/Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv",
+        "data/external/network/Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv"
+      ],
+      "source_url": "https://huggingface.co/datasets/c01dsnap/CIC-IDS2017/tree/main",
+      "upstream_reference": "https://www.unb.ca/cic/datasets/ids-2017.html",
+      "sha256": {
+        "ddos": "6ff1580f5f81c0ae28a26f7631721018577f5f7c5e0feac28b795fcfe7b411ee",
+        "portscan": "ca1824c51bfbb7b3c72290a11be04366ba8815878c6a1cc5c44cb1cee269e99b"
+      },
+      "records_processed_per_file": 100000,
+      "role": "external_validation",
+      "notes": "Pinned public mirror; only DDoS and PortScan files were processed for this branch."
+    },
+    {
+      "id": "openphish-public-feed",
+      "local_path": "data/external/threat-intel/openphish-feed.txt",
+      "source_url": "https://openphish.com/feed.txt",
+      "mirror_url": "https://raw.githubusercontent.com/openphish/public_feed/main/feed.txt",
+      "bytes": 15093,
+      "sha256": "9d2f4617fa7f6aecc6d2bd23944580c79cb456f23d43b53526d2145a3fc91c2e",
+      "records": 300,
+      "unique_domains": 286,
+      "role": "offline_threat_intelligence",
+      "notes": "Frozen local snapshot normalized into integration-tests/openphish.bundle.json; raw feed is gitignored."
+    }
+  ]
+}

@@ -9,6 +9,7 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 INPUT="${1:-$ROOT/person-a/samples/sms.csv}"
 OUT="${2:-$ROOT/guardian_sms_report.json}"
 ARTIFACT="$ROOT/person-c/artifacts/sms.json"
+PREPARED_TRAINING=""
 
 if [[ "$INPUT" != /* ]]; then INPUT="$ROOT/$INPUT"; fi
 if [[ "$OUT" != /* ]]; then OUT="$ROOT/$OUT"; fi
@@ -20,7 +21,19 @@ fi
 
 if [[ ! -f "$ARTIFACT" ]]; then
     echo "Training the SMS model artifact (one-time setup)..."
-    (cd "$ROOT/person-c" && python3 -m guardian_models.train_sms data/public_sms.jsonl artifacts/sms.json)
+    if [[ -n "${GUARDIAN_SMS_TRAINING_DATA:-}" ]]; then
+        TRAINING_DATA="$GUARDIAN_SMS_TRAINING_DATA"
+        if [[ "$TRAINING_DATA" != /* ]]; then TRAINING_DATA="$ROOT/$TRAINING_DATA"; fi
+    else
+        PREPARED_TRAINING="$(mktemp)"
+        trap 'rm -f "$PREPARED_TRAINING"' EXIT
+        python3 "$ROOT/person-c/tools/prepare_sms_dataset.py" \
+            "$PREPARED_TRAINING" \
+            "$ROOT/person-c/data/public_sms.jsonl" \
+            "$ROOT/person-c/data/sms_multilingual.jsonl" >/dev/null
+        TRAINING_DATA="$PREPARED_TRAINING"
+    fi
+    (cd "$ROOT/person-c" && python3 -m guardian_models.train_sms "$TRAINING_DATA" artifacts/sms.json)
 fi
 
 DEFAULT_LLAMA_CMD="/home/dev/executorch/cmake-out/examples/models/llama/llama_main --model_path /home/dev/executorch/llama3_2.pte --tokenizer_path /home/dev/models/llama-3.2-1b-spinquant/tokenizer.model --temperature 0 --seq_len 512 --max_new_tokens 128 --prompt {prompt}"

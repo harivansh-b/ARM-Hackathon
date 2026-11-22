@@ -5,3 +5,9 @@ person-c/artifacts/
 node_modules/
 person-c/.playwright-cli/
 .playwright-cli/
+
+# External benchmark data is downloaded locally for evaluation and never committed.
+data/external/
+integration-tests/external/
+integration-tests/*.normalized.jsonl
+integration-tests/*.manifest.json

@@ -34,11 +34,24 @@ Run commands from the repository root.
 
 ```bash
 cd person-c
+python3 tools/prepare_sms_dataset.py data/sms-training.jsonl \
+    data/public_sms.jsonl data/sms_multilingual.jsonl
 python3 -m guardian_models.train_sms \
-    data/public_sms.jsonl \
+    data/sms-training.jsonl \
     artifacts/sms.json
 cd ..
 ```
+
+The root `guardian_sms_pipeline.sh` prepares the same merged training input
+automatically when the artifact is missing. Set `GUARDIAN_SMS_TRAINING_DATA`
+to a reviewed JSONL file to override that input. Keep
+`person-c/data/indian_hard_negatives.jsonl` evaluation-only.
+
+The merged public-plus-multilingual corpus improved the current hard-set scam
+recall from 60.0% to 86.7%, with held-out F1 remaining approximately 99.7% and
+no change to the measured 26.5% legitimate-message FPR. See
+`../integration-tests/sms_corpus_comparison.json`; these are development
+benchmarks, not production accuracy claims.
 
 ### 2. Run Person A tests
 
@@ -151,6 +164,11 @@ The current small synthetic hard set contains 34 legitimate messages and 15 scam
 The held-out F1 score of approximately 0.99 on the larger test set should not be interpreted as a real-world quality claim. Scam and legitimate examples originate from different public datasets, creating a source-distribution bias. The hard-set results are also limited by their small size and partial similarity to the synthetic training examples.
 
 More real, consented, and anonymised legitimate SMS examples are needed for a credible false-positive evaluation.
+
+Person C also provides normalized benchmark reports for UNSW-NB15,
+CICIDS2017, and a signed OpenPhish offline bundle. These enrich the network
+validation and offline threat-intelligence layers but are not silently mixed
+into SMS training.
 
 ## Benchmark reproducibility
 

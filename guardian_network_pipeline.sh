@@ -20,12 +20,21 @@ if [[ "$OUT" != /* ]]; then OUT="$ROOT/$OUT"; fi
 DEFAULT_LLAMA_CMD="/home/dev/executorch/cmake-out/examples/models/llama/llama_main --model_path /home/dev/executorch/llama3_2.pte --tokenizer_path /home/dev/models/llama-3.2-1b-spinquant/tokenizer.model --temperature 0 --seq_len 512 --max_new_tokens 128 --prompt {prompt}"
 
 LLAMA_CMD="${GUARDIAN_LLAMA_CMD:-$DEFAULT_LLAMA_CMD}"
+DNS_MODEL="${GUARDIAN_DNS_MODEL:-}"
+THREAT_BUNDLE="${GUARDIAN_THREAT_BUNDLE:-}"
+BUNDLE_KEY_FILE="${GUARDIAN_BUNDLE_KEY_FILE:-}"
 
-PYTHONPATH="$ROOT/person-b" python3 - "$PCAP" "$RAW" <<'PY'
-import sys, json
+DNS_MODEL="$DNS_MODEL" THREAT_BUNDLE="$THREAT_BUNDLE" BUNDLE_KEY_FILE="$BUNDLE_KEY_FILE" PYTHONPATH="$ROOT/person-b" python3 - "$PCAP" "$RAW" <<'PY'
+import sys, json, os
 from guardian_net.cli import replay_pcap
 
-alerts = replay_pcap(sys.argv[1], silent=True)
+alerts = replay_pcap(
+    sys.argv[1],
+    silent=True,
+    dns_model_path=os.environ.get('DNS_MODEL') or None,
+    threat_bundle_path=os.environ.get('THREAT_BUNDLE') or None,
+    bundle_key_path=os.environ.get('BUNDLE_KEY_FILE') or None,
+)
 
 with open(sys.argv[2], "w") as f:
     json.dump(alerts, f)
@@ -33,7 +42,7 @@ with open(sys.argv[2], "w") as f:
 print(f"Detection stage: {len(alerts)} alert(s)")
 PY
 
-ROOT="$ROOT" RAW="$RAW" OUT="$OUT" PCAP="$PCAP" LLAMA_CMD="$LLAMA_CMD" python3 - <<'PY'
+ROOT="$ROOT" RAW="$RAW" OUT="$OUT" PCAP="$PCAP" LLAMA_CMD="$LLAMA_CMD" DNS_MODEL="$DNS_MODEL" THREAT_BUNDLE="$THREAT_BUNDLE" BUNDLE_KEY_FILE="$BUNDLE_KEY_FILE" python3 - <<'PY'
 import os, json, shlex, subprocess, re, time, platform, resource
 
 root = os.environ["ROOT"]
