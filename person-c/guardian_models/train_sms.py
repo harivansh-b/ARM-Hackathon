@@ -27,6 +27,7 @@ def main() -> None:
     split.add_argument("--holdout-fraction", type=float, default=0.2)
     parser.add_argument("--epochs", type=int, default=8)
     parser.add_argument("--max-records", type=int)
+    parser.add_argument("--balance", action="store_true", help="weight classes inversely to frequency")
     args = parser.parse_args()
     examples = load_jsonl(args.dataset)
     if args.max_records is not None:
@@ -45,7 +46,7 @@ def main() -> None:
         train_pool, test = deterministic_campaign_split(examples, args.holdout_fraction)
         test_campaigns = sorted({item.campaign for item in test})
     train, calibration = deterministic_campaign_split(train_pool, 0.2, salt="calibration")
-    model = LinearSMSModel(epochs=args.epochs).fit([(item.text, item.label) for item in train])
+    model = LinearSMSModel(epochs=args.epochs).fit([(item.text, item.label) for item in train], balance=args.balance)
     calibration_labels = [item.label for item in calibration]
     calibration_scores = [model.predict_proba(item.text) for item in calibration]
     operating_point = select_threshold(calibration_labels, calibration_scores)
@@ -53,6 +54,7 @@ def main() -> None:
     scores = [model.predict_proba(item.text) for item in test]
     report = binary_metrics(labels, scores, threshold=float(operating_point["threshold"]))
     report["pr_auc"] = pr_auc(labels, scores)
+    report["class_balanced"] = bool(args.balance)
     report["train_count"] = len(train)
     report["calibration_count"] = len(calibration)
     report["test_campaign_count"] = len(test_campaigns)

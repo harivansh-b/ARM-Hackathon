@@ -18,6 +18,9 @@ LURE = (r"\bkbc\b", r"lucky draw", r"\blottery\b", r"\bjackpot\b", r"you(?: have
 WEAK_LURE = (r"\bcongratulations?\b|\bcongrats\b", r"part[- ]time job", r"work from home", r"\bdaily income\b")
 THREAT = (r"illegal", r"\barrest", r"legal action", r"\bcustoms\b", r"narcotics", r"digital arrest", r"will be (?:cut|disconnected|deactivated|blocked|suspended)",
           r"\bdisconnection\b", r"press 1\b", r"\bpolice\b", r"court notice", r"penalty")
+# A message that WARNS about sharing a code (legitimate OTP / KYC notices) is not a message that ASKS for one.
+PROTECT = re.compile(r"(?:do not|don't|dont|never|won't|will not)\s+(?:\w+\s+){0,3}?(?:share|disclose|give|reveal|tell|ask for|ask)\b(?:\s+\w+){0,4}|(?:share|batayein|batana)\s+na\s+\w+|साझा\s+न\s+करें|शेयर\s+न\s+करें|किसी\s+को\s+न\s+बताएं|na\s+batayein|kisi\s+ko\s+na", re.I)
+ASKS_FOR_SECRET = re.compile(r"\b(?:share|send|enter|give|tell|reply|provide|bhejo|bhejein|daalein|batao|batayein)\b[^.!?]{0,25}\b(?:otp|pin|cvv|password|passcode)\b|\b(?:otp|pin|cvv)\b[^.!?]{0,15}\b(?:bhejo|bhejein|bhej)\b|(?:otp|ओटीपी|पिन)\s+(?:भेजें|साझा करें|बताएं|दें)", re.I)
 SHORTENERS = {"bit.ly", "tinyurl.com", "t.co", "is.gd", "cutt.ly"}
 LOOKALIKE_MARKERS = ("paypa1", "micr0soft", "g00gle", "faceb00k", "amaz0n", "netfl1x")
 
@@ -61,6 +64,8 @@ def analyze_sms(text: str, timestamp: int | None = None, sender: str | None = No
     score = 0.0
     for label, words, weight, public_label in (("Urgency language", URGENCY, 0.22, "Suspicious urgency"), ("Sensitive credential request", SECRETS, 0.36, "Sensitive credential request"), ("Payment or reward language", MONEY, 0.18, "Payment or reward language"), ("Impersonation context", IMPERSONATION, 0.12, "Impersonation context")):
         matched = next((word for word in words if word in clean), None)
+        if matched and label == "Sensitive credential request" and PROTECT.search(clean) and not ASKS_FOR_SECRET.search(PROTECT.sub(" ", clean)):
+            matched = None  # warning text ("never share your OTP"), not a request
         if matched:
             reasons.append(label)
             matched_signals.append({"signal": public_label, "matched_text": matched, "action": SIGNAL_ACTIONS[public_label]})

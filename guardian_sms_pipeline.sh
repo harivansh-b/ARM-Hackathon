@@ -30,10 +30,11 @@ if [[ ! -f "$ARTIFACT" ]]; then
         python3 "$ROOT/person-c/tools/prepare_sms_dataset.py" \
             "$PREPARED_TRAINING" \
             "$ROOT/person-c/data/public_sms.jsonl" \
-            "$ROOT/person-c/data/sms_multilingual.jsonl" >/dev/null
+            "$ROOT/person-c/data/sms_multilingual.jsonl" \
+            "$ROOT/person-c/data/indian_synthetic_train.jsonl" >/dev/null
         TRAINING_DATA="$PREPARED_TRAINING"
     fi
-    (cd "$ROOT/person-c" && python3 -m guardian_models.train_sms "$TRAINING_DATA" artifacts/sms.json)
+    (cd "$ROOT/person-c" && python3 -m guardian_models.train_sms "$TRAINING_DATA" artifacts/sms.json --balance --holdout-fraction 0.05)
 fi
 
 DEFAULT_LLAMA_CMD="\"$ROOT/runtime/executorch/llama_main\" --model_path \"$ROOT/models/llama/llama3_2.pte\" --tokenizer_path \"$ROOT/models/llama/tokenizer.model\" --temperature 0 --seq_len 512 --max_new_tokens 128 --prompt {prompt}"

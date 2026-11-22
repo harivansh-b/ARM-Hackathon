@@ -64,10 +64,10 @@ def train_sms_model() -> None:
         prep = tmp.name
     try:
         subprocess.run([sys.executable, str(c / "tools" / "prepare_sms_dataset.py"), prep,
-                        str(c / "data" / "public_sms.jsonl"), str(c / "data" / "sms_multilingual.jsonl")],
+                        str(c / "data" / "public_sms.jsonl"), str(c / "data" / "sms_multilingual.jsonl"), str(c / "data" / "indian_synthetic_train.jsonl")],
                        check=True, capture_output=True)
         SMS_ARTIFACT.parent.mkdir(parents=True, exist_ok=True)
-        subprocess.run([sys.executable, "-m", "guardian_models.train_sms", prep, "artifacts/sms.json"],
+        subprocess.run([sys.executable, "-m", "guardian_models.train_sms", prep, "artifacts/sms.json", "--balance", "--holdout-fraction", "0.05"],
                        cwd=c, check=True, capture_output=True)
     finally:
         os.unlink(prep)

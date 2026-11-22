@@ -56,15 +56,22 @@ class LinearSMSModel:
             score += self.weights.get(feature, 0.0) * value
         return _sigmoid(score)
 
-    def fit(self, examples: list[tuple[str, int]]) -> "LinearSMSModel":
-        """Train deterministic SGD over text/label pairs."""
+    def fit(self, examples: list[tuple[str, int]], balance: bool = False) -> "LinearSMSModel":
+        """Train deterministic SGD over text/label pairs.
+
+        ``balance`` weights each class inversely to its frequency so a corpus that is mostly scam
+        (as the public smishing data is) cannot teach the model that anything transactional is a scam.
+        """
         if not examples:
             raise ValueError("cannot train on an empty dataset")
         ordered = sorted(examples, key=lambda item: self._order(item[0]))
+        positives = sum(1 for _, label in ordered if label == 1)
+        negatives = len(ordered) - positives
+        weights = {0: len(ordered) / (2 * negatives) if negatives else 1.0, 1: len(ordered) / (2 * positives) if positives else 1.0} if balance else {0: 1.0, 1: 1.0}
         for _ in range(self.epochs):
             for text, label in ordered:
                 features = _features(text)
-                error = self.predict_proba(text) - label
+                error = (self.predict_proba(text) - label) * weights[label]
                 self.bias -= self.learning_rate * error
                 for feature, value in features.items():
                     old = self.weights.get(feature, 0.0)
