@@ -495,3 +495,128 @@ def system_info() -> dict:
             "outbound_connections": own_outbound_connections(), "server_port": SERVER_PORT,
             "llama_ready": llama_ready(), "offline": offline_status(), "models": model_files(hashes=False),
             "arm64": platform.machine() in ("aarch64", "arm64")}
+
+
+# ---------------------------------------------------------------- Sustained run
+def _cpu_times() -> tuple[float, float]:
+    try:
+        f = [float(x) for x in open("/proc/stat").readline().split()[1:]]
+        return sum(f), f[3] + (f[4] if len(f) > 4 else 0)  # total, idle+iowait
+    except Exception:
+        return 0.0, 0.0
+
+
+def _rss_mb() -> float | None:
+    try:
+        return round(int(open("/proc/self/statm").read().split()[1]) * os.sysconf("SC_PAGE_SIZE") / 1048576, 1)
+    except Exception:
+        return None
+
+
+def _temp_c() -> float | None:
+    try:
+        return round(int(open("/sys/class/thermal/thermal_zone0/temp").read()) / 1000, 1)
+    except Exception:
+        return None
+
+
+def _pctl(vals: list, p: float):
+    v = sorted(x for x in vals if x is not None)
+    return v[min(len(v) - 1, int(p * len(v)))] if v else None
+
+
+class SustainedRun:
+    """Continuous detector + sensor load in a background thread, sampled every ~2 s. One run at a time."""
+    WINDOW_S, MAX_SECONDS, LLAMA_EVERY = 2.0, 1800, 5
+
+    def __init__(self) -> None:
+        self.lock, self.thread, self.stop_ev = threading.Lock(), None, threading.Event()
+        self._reset()
+
+    def _reset(self) -> None:
+        self.samples, self.running, self.started, self.ended, self.llama, self.error = [], False, None, None, False, None
+
+    def start(self, llama: bool) -> None:
+        with self.lock:
+            if self.running:
+                raise ValueError("a sustained run is already in progress")
+            self._reset()
+            self.llama, self.running, self.started = bool(llama) and llama_ready(), True, time.time()
+            self.stop_ev.clear()
+            self.thread = threading.Thread(target=self._loop, daemon=True)
+            self.thread.start()
+
+    def stop(self) -> None:
+        self.stop_ev.set()
+        if self.thread:
+            self.thread.join(timeout=8)
+
+    def _texts(self) -> list[str]:
+        texts = [m["text"] for m in load_messages(SAMPLE_CSV)]
+        extra = ROOT / "person-a" / "eval" / "extra_samples.jsonl"
+        try:
+            texts += [json.loads(l)["text"] for l in extra.read_text(encoding="utf8").splitlines() if l.strip()]
+        except Exception:
+            pass
+        return texts
+
+    def _loop(self) -> None:
+        try:
+            rt, texts, i, tick = sms_runtime(), self._texts(), 0, 0
+            total0, idle0 = _cpu_times()
+            while not self.stop_ev.is_set() and time.time() - self.started < self.MAX_SECONDS:
+                t0 = time.perf_counter(); lat, ops = [], 0
+                while time.perf_counter() - t0 < self.WINDOW_S and not self.stop_ev.is_set():
+                    lat.append(rt.analyze(texts[i % len(texts)])["latency_ms"]); i += 1; ops += 1
+                    if i % 500 == 0:
+                        replay("smishing_c2_chain")
+                wall = max(time.perf_counter() - t0, 1e-6)
+                total1, idle1 = _cpu_times()
+                cpu = round(100 * (1 - (idle1 - idle0) / (total1 - total0)), 1) if total1 > total0 else None
+                total0, idle0 = total1, idle1
+                mem = _meminfo()
+                s = {"t": round(time.time() - self.started, 1), "ops_per_s": round(ops / wall), "lat_p50_ms": round(_pctl(lat, .5) or 0, 3),
+                     "lat_p95_ms": round(_pctl(lat, .95) or 0, 3),
+                     "mem_used_mb": round(mem.get("MemTotal", 0) - mem.get("MemAvailable", 0)) if mem else None, "rss_mb": _rss_mb(),
+                     "sys_cpu_pct": cpu, "load1": round(os.getloadavg()[0], 2), "temp_c": _temp_c(), "llama_s": None, "llama_tok_s": None}
+                tick += 1
+                if self.llama and tick % self.LLAMA_EVERY == 0 and not self.stop_ev.is_set():
+                    ev = rt.analyze(texts[0])
+                    with _llm_lock:
+                        r = explain(ev, runner())
+                    s["llama_s"] = r.get("llm_seconds"); s["llama_tok_s"] = (r.get("llm_stats") or {}).get("decode_tok_s")
+                self.samples.append(s)
+                if len(self.samples) >= 1800:
+                    break
+        except Exception as e:
+            self.error = f"{type(e).__name__}: {e}"
+        finally:
+            self.ended, self.running = time.time(), False
+
+    def summary(self) -> dict | None:
+        S = self.samples
+        if len(S) < 2:
+            return None
+        col = lambda k: [s[k] for s in S if s.get(k) is not None]
+        ops = col("ops_per_s"); n = max(1, len(ops) // 5)
+        head, tail = sum(ops[:n]) / n, sum(ops[-n:]) / n
+        first, last = S[0], S[-1]
+        temps, ll = col("temp_c"), col("llama_s")
+        return {"duration_s": round(last["t"]), "samples": len(S), "total_ops": int(sum(o * self.WINDOW_S for o in ops)),
+                "ops_per_s_mean": round(sum(ops) / len(ops)), "ops_per_s_min": min(ops), "ops_per_s_max": max(ops),
+                "throughput_drift_pct": round((tail - head) / head * 100, 1) if head else None,
+                "lat_p95_ms_worst": max(col("lat_p95_ms")), "mem_used_mb_start": first["mem_used_mb"], "mem_used_mb_end": last["mem_used_mb"],
+                "rss_mb_start": first["rss_mb"], "rss_mb_end": last["rss_mb"], "rss_mb_peak": max(col("rss_mb") or [0]),
+                "sys_cpu_pct_mean": round(sum(col("sys_cpu_pct")) / len(col("sys_cpu_pct")), 1) if col("sys_cpu_pct") else None,
+                "temp_c_start": temps[0] if temps else None, "temp_c_end": temps[-1] if temps else None, "temp_c_max": max(temps) if temps else None,
+                "llama_runs": len(ll), "llama_s_mean": round(sum(ll) / len(ll), 2) if ll else None,
+                "llama_s_first": ll[0] if ll else None, "llama_s_last": ll[-1] if ll else None}
+
+    def status(self) -> dict:
+        el = (self.ended or time.time()) - self.started if self.started else 0
+        return {"running": self.running, "llama": self.llama, "elapsed_s": round(el), "max_seconds": self.MAX_SECONDS, "window_s": self.WINDOW_S,
+                "has_data": bool(self.samples), "samples": self.samples, "summary": self.summary(), "error": self.error,
+                "temp_available": _temp_c() is not None}
+
+
+SUSTAINED = SustainedRun()

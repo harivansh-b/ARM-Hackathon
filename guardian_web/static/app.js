@@ -210,6 +210,57 @@ function pgSensor() {
   }
 }
 
+/* ---------- Sustained run ---------- */
+function chart(title, unit, pts, color) {
+  const v = pts.filter(p => p[1] != null); if (v.length < 2) return `<div class="ch"><b>${esc(title)}</b><div class="sub">collecting…</div></div>`;
+  const W = 300, H = 70, xs = v.map(p => p[0]), ys = v.map(p => p[1]); const x0 = xs[0], x1 = xs[xs.length - 1] || 1;
+  let lo = Math.min(...ys), hi = Math.max(...ys); if (hi === lo) { hi += 1; lo -= 1; } const pad = (hi - lo) * 0.1; lo -= pad; hi += pad;
+  const path = v.map((p, i) => `${i ? "L" : "M"}${((p[0] - x0) / (x1 - x0 || 1) * W).toFixed(1)},${(H - (p[1] - lo) / (hi - lo) * H).toFixed(1)}`).join("");
+  const last = ys[ys.length - 1];
+  return `<div class="ch"><div class="row sb"><b>${esc(title)}</b><span class="sub"><b style="color:var(--ink)">${last}</b> ${esc(unit)} · min ${Math.min(...ys)} · max ${Math.max(...ys)}</span></div><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="${color}" stroke-width="1.8" vector-effect="non-scaling-stroke"/></svg></div>`;
+}
+function sustainedUI(my, llamaReady) {
+  const box = $("#sr"); let timer = null, last = null;
+  box.innerHTML = `<p class="sub" style="margin:0 0 12px">Runs the SMS detector and network sensor continuously in the background and charts how this machine copes over time: speed, memory, CPU and temperature. Turn it off whenever you like to freeze the charts and read the summary. It stops by itself after 30 minutes.</p>
+  <div class="row sb"><label class="sw"><input type="checkbox" id="sw"><span class="knob"></span><b id="swl">Sustained run is off</b></label>
+  <label class="sub" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="swll" ${llamaReady ? "" : "disabled"}> Include Llama explanations (about every 10 s)</label></div><div id="srb" style="margin-top:14px"></div>`;
+  const sw = $("#sw");
+  const render = st => {
+    last = st; sw.checked = st.running; $("#swl").textContent = st.running ? `Running · ${st.elapsed_s}s` : st.has_data ? "Stopped — showing the last run" : "Sustained run is off";
+    if (!st.has_data) { $("#srb").innerHTML = ""; return; }
+    const S = st.samples, P = k => S.map(s => [s.t, s[k]]), m = st.summary;
+    const tiles = m ? `<div class="tiles" style="margin-bottom:12px"><div class="tile"><b>${m.duration_s}s</b><span>Duration</span></div><div class="tile"><b>${m.ops_per_s_mean.toLocaleString()}</b><span>Messages/s average</span></div><div class="tile"><b style="color:${m.throughput_drift_pct != null && m.throughput_drift_pct < -10 ? "var(--bad)" : "var(--ok)"}">${m.throughput_drift_pct == null ? "–" : (m.throughput_drift_pct > 0 ? "+" : "") + m.throughput_drift_pct + "%"}</b><span>Speed change, start → end</span></div><div class="tile"><b>${m.rss_mb_peak ?? "–"} MB</b><span>Guardian peak memory</span></div></div>` : "";
+    $("#srb").innerHTML = (st.error ? `<div class="err">${esc(st.error)}</div>` : "") + tiles + `<div class="charts">
+      ${chart("Throughput", "msgs/s", P("ops_per_s"), "var(--moss)")}${chart("Detector latency p95", "ms", P("lat_p95_ms"), "var(--warn)")}
+      ${chart("Guardian memory", "MB", P("rss_mb"), "var(--moss)")}${chart("Machine memory in use", "MB", P("mem_used_mb"), "var(--warn)")}
+      ${chart("CPU busy (all cores)", "%", P("sys_cpu_pct"), "var(--bad)")}
+      ${st.temp_available ? chart("CPU temperature", "°C", P("temp_c"), "var(--bad)") : `<div class="ch"><b>CPU temperature</b><div class="sub">No temperature sensor is exposed on this machine (typical for VMs).</div></div>`}
+      ${st.llama ? chart("Llama time per explanation", "s", P("llama_s"), "var(--moss)") + chart("Llama speed", "tok/s", P("llama_tok_s"), "var(--ok)") : ""}</div>
+      ${m && !st.running ? `<h2 style="margin-top:16px">Summary</h2><div class="card"><dl class="kv">
+        <dt>Messages analysed</dt><dd>${m.total_ops.toLocaleString()} in ${m.duration_s}s (${m.ops_per_s_min}–${m.ops_per_s_max} msgs/s)</dd>
+        <dt>Slowest 5% latency</dt><dd>${m.lat_p95_ms_worst} ms at worst</dd>
+        <dt>Memory</dt><dd>Guardian ${m.rss_mb_start ?? "–"} → ${m.rss_mb_end ?? "–"} MB · machine ${m.mem_used_mb_start ?? "–"} → ${m.mem_used_mb_end ?? "–"} MB</dd>
+        <dt>CPU busy</dt><dd>${m.sys_cpu_pct_mean ?? "–"}% average</dd>
+        <dt>Temperature</dt><dd>${m.temp_c_start != null ? `${m.temp_c_start} → ${m.temp_c_end} °C (max ${m.temp_c_max})` : "not available"}</dd>
+        ${m.llama_runs ? `<dt>Llama</dt><dd>${m.llama_runs} explanations, ${m.llama_s_mean}s average (first ${m.llama_s_first}s, last ${m.llama_s_last}s)</dd>` : ""}</dl>
+        <div class="row" style="margin-top:10px"><button class="sm ghost" id="dj">Download JSON</button><button class="sm ghost" id="dc">Download CSV</button></div></div>` : ""}`;
+    const dl = (name, text, type) => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); };
+    if ($("#dj")) { $("#dj").onclick = () => dl("guardian_sustained_run.json", JSON.stringify({ summary: m, samples: S }, null, 2), "application/json");
+      $("#dc").onclick = () => { const k = Object.keys(S[0]); dl("guardian_sustained_run.csv", [k.join(",")].concat(S.map(s => k.map(x => s[x] ?? "").join(","))).join("\n"), "text/csv"); }; }
+  };
+  const poll = async () => { if (my !== seq) return clearInterval(timer); try { const st = await api("/api/sustained"); render(st); if (!st.running) { clearInterval(timer); timer = null; } } catch { } };
+  const begin = () => { clearInterval(timer); timer = setInterval(poll, 2000); poll(); };
+  sw.onchange = async () => {
+    sw.disabled = true;
+    try {
+      if (sw.checked) { render(await api("/api/sustained/start", { llama: $("#swll").checked })); begin(); }
+      else { $("#swl").textContent = "Stopping…"; render(await api("/api/sustained/stop", {})); clearInterval(timer); timer = null; poll(); }
+    } catch (e) { $("#srb").innerHTML = `<div class="err">${esc(e.message)}</div>`; sw.checked = !sw.checked; }
+    sw.disabled = false;
+  };
+  api("/api/sustained").then(st => { if (my !== seq) return; render(st); if (st.running) begin(); });
+}
+
 /* ---------- Live System Metrics ---------- */
 function pgSystem() {
   $("#main").innerHTML = `<h1>Live System Metrics</h1><p class="lede">Everything on this page is read or measured on this machine, right now. Nothing is hard-coded or copied from earlier runs.</p><div id="sys"><span class="spin"></span></div>`;
@@ -241,7 +292,8 @@ function pgSystem() {
     <h2>AI models &amp; runtime files</h2><div class="card"><p class="sub" style="margin:0 0 10px">The SHA-256 is a fingerprint of each file. If even one byte changes, it changes — so matching the organiser's reference values proves these are the exact models that were approved.</p>
     <table><thead><tr><th>Artifact</th><th>Size</th><th>SHA-256</th></tr></thead><tbody id="mf">${s.models.map(mrow).join("")}</tbody></table></div>
     <div class="row sb"><h2>Measured performance</h2><button class="sm ghost" id="rb" style="margin-top:18px">↻ Re-measure</button></div>
-    <div class="card" id="bo"></div>`;
+    <div class="card" id="bo"></div>
+    <h2>Sustained run</h2><div class="card" id="sr"></div>`;
     live(s); timer = setInterval(async () => { if (my !== seq) return clearInterval(timer); try { live(await api("/api/system")); } catch { } }, 3000);
     api("/api/system/hashes").then(m => { if (my === seq) $("#mf").innerHTML = m.map(mrow).join(""); });
     const measure = async () => {
@@ -268,7 +320,7 @@ function pgSystem() {
       } catch (e) { $("#bo").innerHTML = `<div class="err">${esc(e.message)}</div>`; }
       $("#rb").disabled = false;
     };
-    $("#rb").onclick = measure; measure();
+    $("#rb").onclick = measure; measure(); sustainedUI(my, s.llama_ready);
   }).catch(e => $("#sys").innerHTML = `<div class="err">${esc(e.message)}</div>`);
 }
 

@@ -45,6 +45,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(core.stored_benchmarks())
             if path == "/api/sensor/scenarios":
                 return self._json(core.list_scenarios())
+            if path == "/api/sustained":
+                return self._json(core.SUSTAINED.status())
             if path == "/api/status":
                 return self._json({"ok": True, "llama_ready": core.llama_ready()})
         except Exception as e:
@@ -89,6 +91,12 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(core.replay(b.get("scenario"), with_llm=bool(b.get("llm"))))
             if path == "/api/sensor/upload":
                 return self._json(self._upload_pcap())
+            if path == "/api/sustained/start":
+                core.SUSTAINED.start(bool(self._body().get("llama")))
+                return self._json(core.SUSTAINED.status())
+            if path == "/api/sustained/stop":
+                core.SUSTAINED.stop()
+                return self._json(core.SUSTAINED.status())
             if path == "/api/system/benchmark":
                 return self._json(core.live_benchmark())
             if path == "/api/system/llama-benchmark":
