@@ -78,7 +78,11 @@ def main() -> None:
                     "record_id": written,
                     "dataset": args.dataset,
                     "label": label,
-                    "is_attack": label.casefold() not in {"0", "benign", "normal", "safe"},
+                    "is_attack": not (
+                        label.casefold() in {"0", "benign", "normal", "safe"}
+                        or "benign" in label.casefold()
+                        or "normal" in label.casefold()
+                    ),
                     "features": features,
                 }
                 output.write(json.dumps(normalized, ensure_ascii=False) + "\n")

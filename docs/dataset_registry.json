@@ -35,14 +35,14 @@
       "role": "url_benchmark",
       "status": "adapter_implemented_benchmark_pending",
       "source": "https://www.unb.ca/cic/datasets/url-2016.html",
-      "notes": "Use through a local, licensed snapshot and report source age."
+      "notes": "Downloaded feature CSV mirror; benchmark report exists, but no raw URL column is available for runtime lexical evaluation."
     },
     {
       "id": "cic-bell-dns-exf-2021",
       "role": "dns_benchmark",
       "status": "adapter_implemented_benchmark_pending",
       "source": "https://www.unb.ca/cic/datasets/dns-exf-2021.html",
-      "notes": "Feature-compatible candidate for DNS exfiltration evaluation."
+      "notes": "Downloaded feature CSV snapshot; baseline report exists, but current stateless thresholds have low recall."
     },
     {
       "id": "cicids2017",

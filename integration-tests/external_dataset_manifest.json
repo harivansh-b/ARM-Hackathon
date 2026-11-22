@@ -1,0 +1,28 @@
+{
+  "collection_date": "2026-11-22",
+  "raw_files_are_gitignored": true,
+  "datasets": [
+    {
+      "id": "iscx-url2016-mirror",
+      "local_path": "data/external/ISCX-URL2016_All.csv",
+      "source_url": "https://raw.githubusercontent.com/quickheaven/scs-3253-machine-learning/master/datasets/ISCX-URL2016_All.csv",
+      "upstream_reference": "https://www.unb.ca/cic/datasets/url-2016.html",
+      "bytes": 11661240,
+      "sha256": "39bd96b0c4738daff7be9db7fb9561512afa5599ab34484aa5b7e70c1c55034c",
+      "records": 36707,
+      "classes": ["benign", "defacement", "malware", "phishing", "spam"],
+      "role": "benchmark_only",
+      "notes": "Feature CSV; no raw URL string column. Mirror provenance must be disclosed."
+    },
+    {
+      "id": "cic-bell-dns-exf-2021-zenodo",
+      "local_path": "data/external/CIC-Bell-DNS-EXF-2021.csv",
+      "source_url": "https://zenodo.org/records/18139853/files/CIC-Bell-DNS-EXF-2021.csv?download=1",
+      "upstream_reference": "https://www.unb.ca/cic/datasets/dns-exf-2021.html",
+      "bytes": 46770313,
+      "sha256": "62ec5d632c9e665851c551487d6d1e2afbc7f8f55b62cac4649999dadafc89de",
+      "role": "benchmark_only",
+      "notes": "Feature-based DNS benchmark; raw PCAP archive was not downloaded."
+    }
+  ]
+}

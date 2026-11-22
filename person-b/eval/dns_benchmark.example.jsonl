@@ -1,0 +1,2 @@
+{"dataset":"dns-exf","label":"heavy_benign","is_attack":false,"features":{"entropy":2.4,"labels_max":12,"FQDN_count":30,"subdomain_length":8,"TXT_frequency":0,"NULL_frequency":0}}
+{"dataset":"dns-exf","label":"heavy_attack","is_attack":true,"features":{"entropy":4.2,"labels_max":58,"FQDN_count":140,"subdomain_length":55,"TXT_frequency":0.7,"NULL_frequency":0}}

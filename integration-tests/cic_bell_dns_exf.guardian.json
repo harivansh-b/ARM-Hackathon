@@ -1,0 +1,41 @@
+{
+  "dataset": "integration-tests\\cic_bell_dns_exf.normalized.jsonl",
+  "threshold": 0.35,
+  "records": 100000,
+  "note": "Guardian-aligned stateless heuristic; no payloads or network lookups.",
+  "overall": {
+    "count": 100000,
+    "tp": 898,
+    "tn": 27715,
+    "fp": 257,
+    "fn": 71130,
+    "precision": 0.7774891774891775,
+    "recall": 0.012467373799078136,
+    "f1": 0.02454121858901657,
+    "false_positive_rate": 0.009187759187759189
+  },
+  "by_label": {
+    "heavy_attack": {
+      "count": 72028,
+      "tp": 898,
+      "tn": 0,
+      "fp": 0,
+      "fn": 71130,
+      "precision": 1.0,
+      "recall": 0.012467373799078136,
+      "f1": 0.024627704796643172,
+      "false_positive_rate": 0.0
+    },
+    "heavy_benign": {
+      "count": 27972,
+      "tp": 0,
+      "tn": 27715,
+      "fp": 257,
+      "fn": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "false_positive_rate": 0.009187759187759189
+    }
+  }
+}

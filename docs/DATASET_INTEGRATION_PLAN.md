@@ -104,3 +104,17 @@ more diverse legitimate Indian messages rather than more synthetic scam rows.
 This is a diagnostic result, not a production accuracy claim; final reporting
 should rerun the comparison with the deployment training configuration.
 
+## Downloaded benchmark findings
+
+Two local benchmark files have now been downloaded under the gitignored
+`data/external/` directory. Their URLs, hashes and roles are recorded in
+`integration-tests/external_dataset_manifest.json`.
+
+| Benchmark | Current result | Decision |
+|---|---|---|
+| ISCX-URL2016 feature CSV | 36,707 records across five classes; the current URL runtime cannot consume it because it has no raw URL column. The dependency-free feature baseline achieved 0% recall at the selected <=5% false-positive operating point. | Do not wire into runtime yet; obtain raw URL strings or build a separately validated numeric URL model. |
+| CIC-Bell-DNS-EXF-2021 | 100,000-row diagnostic sample: precision 77.7%, recall 1.25%, FPR 0.92% using current stateless thresholds. | Do not claim improvement yet; retune or train a DNS model using the benchmark's feature schema and evaluate by day/category. |
+
+These failures are useful evidence: adding a public benchmark without adapting
+the feature schema would make the submission less credible, not more.
+

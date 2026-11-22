@@ -1,0 +1,25 @@
+{
+  "dataset": "data\\external\\ISCX-URL2016_All.csv",
+  "url_column": "",
+  "label_column": "URL_Type_obf_Type",
+  "mode": "feature_only_benchmark_baseline",
+  "feature_only_note": "Feature-only mode is benchmark evidence and is not wired into Guardian runtime inference.",
+  "threshold": 1.0,
+  "records": 36707,
+  "evaluated_test_records": 7342,
+  "total_input_records": 36707,
+  "skipped": 0,
+  "note": "URL structure only; no network lookups were performed.",
+  "overall": {
+    "count": 7342,
+    "tp": 0,
+    "tn": 1631,
+    "fp": 0,
+    "fn": 5711,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "false_positive_rate": 0.0
+  },
+  "by_source_label": {}
+}
