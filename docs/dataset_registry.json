@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "project": "Guardian",
+  "policy": {
+    "training_requires_provenance": true,
+    "evaluation_must_be_holdout": true,
+    "synthetic_data_must_be_labelled": true,
+    "runtime_must_remain_offline": true
+  },
+  "datasets": [
+    {
+      "id": "public-sms-phishing-v1",
+      "path": "person-c/data/public_sms.jsonl",
+      "role": "sms_training",
+      "status": "incorporated",
+      "source_manifest": "person-c/data/public_sms.sources.json",
+      "notes": "Public SMS phishing and SMS Spam Collection derivative; review source terms before redistribution."
+    },
+    {
+      "id": "guardian-multilingual-starter",
+      "path": "person-c/data/sms_multilingual.jsonl",
+      "role": "sms_training_augmentation",
+      "status": "incorporated",
+      "notes": "Synthetic, hand-reviewed English/Hindi/Hinglish starter examples."
+    },
+    {
+      "id": "guardian-indian-hard-negatives",
+      "path": "person-c/data/indian_hard_negatives.jsonl",
+      "role": "sms_evaluation",
+      "status": "evaluation_only",
+      "notes": "Legitimate Indian OTP, UPI, bank, tax and delivery messages; never merge into training by default."
+    },
+    {
+      "id": "iscx-url2016",
+      "role": "url_benchmark",
+      "status": "planned",
+      "source": "https://www.unb.ca/cic/datasets/url-2016.html",
+      "notes": "Use through a local, licensed snapshot and report source age."
+    },
+    {
+      "id": "cic-bell-dns-exf-2021",
+      "role": "dns_benchmark",
+      "status": "planned",
+      "source": "https://www.unb.ca/cic/datasets/dns-exf-2021.html",
+      "notes": "Feature-compatible candidate for DNS exfiltration evaluation."
+    },
+    {
+      "id": "cicids2017",
+      "role": "network_external_validation",
+      "status": "planned",
+      "source": "https://www.unb.ca/cic/datasets/ids-2017.html",
+      "notes": "Use with a feature adapter; do not merge raw flow columns into Guardian evidence."
+    },
+    {
+      "id": "unsw-nb15",
+      "role": "network_cross_dataset_validation",
+      "status": "planned",
+      "source": "https://research.unsw.edu.au/projects/unsw-nb15-dataset",
+      "notes": "Use the official train/test split and preserve attack-family labels."
+    },
+    {
+      "id": "phishtank-openphish",
+      "role": "offline_threat_intelligence",
+      "status": "planned",
+      "notes": "Frozen snapshots for local lookup; not a balanced classifier-training set."
+    }
+  ]
+}

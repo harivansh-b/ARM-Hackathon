@@ -69,3 +69,19 @@ email addresses but does not make the messages safe for production use.
 The scraper redacts phone numbers and email addresses, deduplicates exact phishing-message text, and assigns a template-derived campaign group. The legacy corpus does not provide true campaign IDs, so its template groups are only a leakage-reduction heuristic.
 
 Before redistribution or competition submission, review the source terms and cite the original papers. Do not report metrics from this corpus as production performance without a time-ordered or campaign-held-out evaluation and hard-negative analysis.
+
+## Guardian integration policy
+
+The default SMS training input is the public corpus plus the checked-in
+multilingual starter set. Build that input with:
+
+```text
+python tools/prepare_sms_dataset.py data/sms-training.jsonl \
+    data/public_sms.jsonl data/sms_multilingual.jsonl
+```
+
+`indian_hard_negatives.jsonl` is evaluation-only. Use
+`tools/compare_sms_corpora.py` before accepting a new corpus; the comparison
+reports campaign-held-out results and hard-negative false positives for the
+current model. Dataset roles and planned network/URL integrations are tracked
+in `docs/dataset_registry.json` and `docs/DATASET_INTEGRATION_PLAN.md`.

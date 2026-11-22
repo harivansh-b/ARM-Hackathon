@@ -34,11 +34,18 @@ Run commands from the repository root.
 
 ```bash
 cd person-c
+python3 tools/prepare_sms_dataset.py data/sms-training.jsonl \
+    data/public_sms.jsonl data/sms_multilingual.jsonl
 python3 -m guardian_models.train_sms \
-    data/public_sms.jsonl \
+    data/sms-training.jsonl \
     artifacts/sms.json
 cd ..
 ```
+
+The root `guardian_sms_pipeline.sh` prepares the same merged training input
+automatically when the artifact is missing. Set `GUARDIAN_SMS_TRAINING_DATA`
+to a reviewed JSONL file to override that input. Keep
+`person-c/data/indian_hard_negatives.jsonl` evaluation-only.
 
 ### 2. Run Person A tests
 
