@@ -60,3 +60,22 @@ labelled benign set.
    and reports.
 4. Add frozen threat-intelligence snapshots only with a manifest and expiry.
 
+## Current measured SMS result
+
+The first candidate comparison is recorded in
+`integration-tests/sms_corpus_comparison.json`. It used one training epoch as
+a fast diagnostic; the split and evaluation procedure are the same for both
+candidates.
+
+| Candidate | Held-out F1 | Hard-set scam recall | Hard-set legitimate FPR |
+|---|---:|---:|---:|
+| Public corpus only | 0.9968 | 60.0% | 26.5% |
+| Public + multilingual starter | 0.9966 | 86.7% | 26.5% |
+
+The augmentation materially improved detection of the hard-set scam examples,
+with essentially unchanged public-corpus performance. It did not improve the
+legitimate-message false-positive rate, so the next data addition should be
+more diverse legitimate Indian messages rather than more synthetic scam rows.
+This is a diagnostic result, not a production accuracy claim; final reporting
+should rerun the comparison with the deployment training configuration.
+
