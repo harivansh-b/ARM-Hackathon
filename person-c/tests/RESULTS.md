@@ -22,7 +22,7 @@ Latest local verification run: **2026-11-22** (Asia/Calcutta).
 
 | Check | Result | Scope |
 |---|---:|---|
-| Python unit tests | **19 passed** | Normalization, detection, training, metrics, runtime safety, verifier, bundle security, evidence linking and hard negatives |
+| Python unit tests | **22 passed** | Person C models, dataset adapters, normalization, detection, training, metrics, runtime safety, verifier, bundle security and evidence linking |
 | Python compilation | **Passed** | All `guardian_models` modules |
 | Scraper syntax check | **Passed** | `tools/scrape_public_sms.js` |
 | Multilingual corpus validation | **Passed** | JSONL schema, label balance and language counts |

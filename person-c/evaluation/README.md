@@ -38,6 +38,25 @@ python evaluation/offline_smoke.py artifacts/sms-multilingual.json --output eval
 
 This confirms that core detection and guidance execute while socket connections are denied. It is host evidence only and is not a substitute for authorised lab sign-off.
 
+## Current dataset evidence
+
+The current branch includes separate reports for the SMS, DNS, network and
+offline threat-intelligence workstreams:
+
+| Workstream | Current result |
+|---|---|
+| SMS multilingual augmentation | 86.7% hard-scam recall; 26.5% Indian legitimate-message FPR |
+| UNSW-NB15 | 84.68% attack recall, 67.19% benign recall, 76.18% macro F1 |
+| CICIDS2017 DDoS | 99.92% attack recall, 99.78% benign recall, 99.86% macro F1 |
+| CICIDS2017 PortScan | 99.90% attack recall, 99.41% benign recall, 98.80% macro F1 |
+| OpenPhish lookup | 300/300 malicious matches and 0/20 curated benign matches |
+| DNS live parity | Default and opt-in model paths preserved local scenario alert counts |
+
+The network classifier numbers are reference benchmark results, not live
+Guardian accuracy. The OpenPhish number is a lookup-integrity check, not a
+population-level phishing prevalence estimate. PhishTank can be added through
+the same signed bundle builder once an application-key feed is available.
+
 On the ARM target, run:
 
 ```text

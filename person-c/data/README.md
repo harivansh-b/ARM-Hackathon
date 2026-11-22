@@ -83,5 +83,15 @@ python tools/prepare_sms_dataset.py data/sms-training.jsonl \
 `indian_hard_negatives.jsonl` is evaluation-only. Use
 `tools/compare_sms_corpora.py` before accepting a new corpus; the comparison
 reports campaign-held-out results and hard-negative false positives for the
-current model. Dataset roles and planned network/URL integrations are tracked
+current model. Dataset roles and current network/URL integrations are tracked
 in `docs/dataset_registry.json` and `docs/DATASET_INTEGRATION_PLAN.md`.
+
+The current public-plus-multilingual comparison raises hard-set scam recall
+from 60.0% to 86.7% with held-out F1 essentially unchanged at about 99.7%.
+The legitimate Indian hard-negative FPR remains 26.5%, so additional diverse
+legitimate Indian messages are still needed.
+
+Network and threat-intelligence reports are maintained at the repository-level
+`integration-tests/` directory. UNSW-NB15 and CICIDS2017 are reference
+benchmarks; OpenPhish is a signed offline lookup bundle; PhishTank remains
+pending an application-key snapshot.
