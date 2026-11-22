@@ -10,6 +10,8 @@ PLAYBOOK = {
     "link": "Do not open the link; verify the organisation through its official app or website.",
     "payment": "Do not pay a fee or transfer money to claim a reward or resolve an unexpected request.",
     "impersonation": "Contact the organisation using a trusted number or official app, not the message.",
+    "lure": "Do not respond to unexpected prize, lottery or job offers, and never pay a fee to receive money or work.",
+    "threat": "Do not call back or pay under pressure; authorities and utilities do not demand this by SMS. Verify through their official channel.",
 }
 
 UNSAFE_ACTIONS = re.compile(r"\b(click|open|tap|pay|transfer|install|call|send|share|reply)\b", re.I)
@@ -27,6 +29,10 @@ def approved_actions(evidence: dict) -> list[str]:
         actions.append(PLAYBOOK["payment"])
     if "Impersonation context" in signals:
         actions.append(PLAYBOOK["impersonation"])
+    if "Prize or job lure" in signals:
+        actions.append(PLAYBOOK["lure"])
+    if "Threat or coercion" in signals:
+        actions.append(PLAYBOOK["threat"])
     return actions or [evidence.get("safe_action", "Verify independently before responding.")]
 
 

@@ -12,6 +12,12 @@ URGENCY = ("urgent", "immediately", "now", "24 hours", "suspended", "blocked", "
 SECRETS = ("otp", "pin", "cvv", "password", "passcode", "verification code", "ओटीपी", "पासवर्ड", "पिन", "गोपनीय कोड", "otp bhejo", "code bhejo")
 MONEY = ("pay", "fee", "refund", "prize", "cash", "transfer", "claim", "भुगतान", "फीस", "इनाम", "रिफंड", "पैसे", "jama", "bhugtan", "inaam", "paisa")
 IMPERSONATION = ("bank", "government", "courier", "delivery", "tax", "support", "account", "बैंक", "सरकार", "डिलीवरी", "खाता", "केवाईसी", "kyc", "customer care", "customer-care")
+# India-relevant scam lures and coercion. Matched on word boundaries (not substrings) to limit false alarms.
+LURE = (r"\bkbc\b", r"lucky draw", r"\blottery\b", r"\bjackpot\b", r"you(?: have)? won", r"\bearn\b.{0,25}(?:rs\.?|₹|inr)\s?\d",
+        r"(?:rs\.?|₹|inr)\s?[\d,]+\s?(?:daily|per day|a day)", r"liking .{0,20}videos")
+WEAK_LURE = (r"\bcongratulations?\b|\bcongrats\b", r"part[- ]time job", r"work from home", r"\bdaily income\b")
+THREAT = (r"illegal", r"\barrest", r"legal action", r"\bcustoms\b", r"narcotics", r"digital arrest", r"will be (?:cut|disconnected|deactivated|blocked|suspended)",
+          r"\bdisconnection\b", r"press 1\b", r"\bpolice\b", r"court notice", r"penalty")
 SHORTENERS = {"bit.ly", "tinyurl.com", "t.co", "is.gd", "cutt.ly"}
 LOOKALIKE_MARKERS = ("paypa1", "micr0soft", "g00gle", "faceb00k", "amaz0n", "netfl1x")
 
@@ -21,6 +27,8 @@ SIGNAL_ACTIONS = {
     "Payment or reward language": "Do not pay a fee or transfer money to claim a reward.",
     "Impersonation context": "Contact the organisation using a trusted number, not the SMS.",
     "Link present": "Do not open the link until its destination is independently verified.",
+    "Prize or job lure": "Do not respond to unexpected prize, lottery or job offers; never pay a fee to receive money or work.",
+    "Threat or coercion": "Authorities and utilities do not demand calls or payment by SMS; verify through their official channel.",
 }
 
 
@@ -57,6 +65,18 @@ def analyze_sms(text: str, timestamp: int | None = None, sender: str | None = No
             reasons.append(label)
             matched_signals.append({"signal": public_label, "matched_text": matched, "action": SIGNAL_ACTIONS[public_label]})
             score += weight
+    for label, patterns, weight in (("Prize or job lure", LURE, 0.45), ("Prize or job lure", WEAK_LURE, 0.15), ("Threat or coercion", THREAT, 0.30)):
+        if any(m["signal"] == label for m in matched_signals):
+            continue
+        hit = next((m for p in patterns if (m := re.search(p, clean))), None)
+        if hit:
+            reasons.append(label)
+            matched_signals.append({"signal": label, "matched_text": hit.group(0), "action": SIGNAL_ACTIONS[label]})
+            score += weight
+    names = {m["signal"] for m in matched_signals}
+    if "Suspicious urgency" in names and ({"Impersonation context", "Threat or coercion"} & names):
+        score += 0.10  # urgency combined with authority or coercion is a classic scam pattern
+        reasons.append("Urgency combined with authority or threat")
     urls = extract_urls(text)
     if urls:
         reasons.append("Link present")

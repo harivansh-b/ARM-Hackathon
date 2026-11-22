@@ -1,7 +1,6 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
-person-c/artifacts/
 node_modules/
 person-c/.playwright-cli/
 .playwright-cli/

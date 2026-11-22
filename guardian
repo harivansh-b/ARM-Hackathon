@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Guardian launcher: ./guardian serve | check | import | sensor | system
+cd "$(dirname "$(readlink -f "$0")")" && exec python3 -c 'import sys; sys.path.insert(0,"."); from guardian_web.cli import main; main()' "$@"

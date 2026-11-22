@@ -49,9 +49,12 @@ def extract_urls(text: str) -> list[str]:
         candidate = raw.rstrip(".,!?;:)]}")
         if candidate.lower().startswith("www."):
             candidate = "https://" + candidate
-        parts = urlsplit(candidate)
-        if parts.netloc:
-            urls.append(normalize_url(candidate))
+        try:
+            parts = urlsplit(candidate)
+            if parts.netloc:
+                urls.append(normalize_url(candidate))
+        except ValueError:  # malformed URL (e.g. bad IPv6 brackets): skip it, never crash the scan
+            continue
     return list(dict.fromkeys(urls))
 
 
