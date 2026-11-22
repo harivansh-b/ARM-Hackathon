@@ -38,7 +38,7 @@ DEFAULT_REPORT = ROOT / "reports" / "net_evidence.jsonl"
 
 
 def run_sentinel_cmd(args: argparse.Namespace) -> None:
-    tunnel_det = DNSTunnelDetector()
+    tunnel_det = DNSTunnelDetector(model_path=args.dns_model)
     dga_det = DGADetector()
     deny_det = DenylistDetector()
 
@@ -94,11 +94,12 @@ def replay_pcap(
     pcap_path: str | Path,
     evidence_file: str | Path | None = None,
     silent: bool = False,
+    dns_model_path: str | Path | None = None,
 ) -> list[dict]:
     """Replay a PCAP file through the complete flow and detection pipeline."""
     reader = PcapReader(pcap_path)
     flow_table = FlowTable()
-    tunnel_det = DNSTunnelDetector()
+    tunnel_det = DNSTunnelDetector(model_path=dns_model_path)
     dga_det = DGADetector()
     beacon_det = BeaconDetector(min_events=5)
     scan_det = OutboundScanDetector()
@@ -234,7 +235,7 @@ def run_scenarios_cmd(args: argparse.Namespace) -> None:
 def run_sniff_cmd(args: argparse.Namespace) -> None:
     """Capture live packets and feed the existing stateful detection pipeline."""
     flow_table = FlowTable()
-    tunnel_det = DNSTunnelDetector()
+    tunnel_det = DNSTunnelDetector(model_path=args.dns_model)
     dga_det = DGADetector()
     beacon_det = BeaconDetector(min_events=5)
     scan_det = OutboundScanDetector()
@@ -305,17 +306,20 @@ def main() -> None:
     p_sent.add_argument("--upstream-host", default="10.77.0.2")
     p_sent.add_argument("--upstream-port", type=int, default=53)
     p_sent.add_argument("--evidence-file", default=DEFAULT_REPORT)
+    p_sent.add_argument("--dns-model", type=Path, help="Optional offline DNS model artifact")
 
     # live sniff
     p_sniff = subparsers.add_parser("sniff", help="Capture live packets and run detectors")
     p_sniff.add_argument("--interface", default="enp0s1", help="Capture interface (default: enp0s1)")
     p_sniff.add_argument("--evidence-file", type=Path, default=DEFAULT_REPORT)
     p_sniff.add_argument("--quiet", action="store_true", help="Suppress alert lines")
+    p_sniff.add_argument("--dns-model", type=Path, help="Optional offline DNS model artifact")
 
     # replay
     p_rep = subparsers.add_parser("replay", help="Replay PCAP file")
     p_rep.add_argument("--pcap", required=True, type=Path, help="Path to pcap file")
     p_rep.add_argument("--evidence-file", default=DEFAULT_REPORT)
+    p_rep.add_argument("--dns-model", type=Path, help="Optional offline DNS model artifact")
 
     # scenarios
     p_scen = subparsers.add_parser("scenarios", help="Run scenario test suite")
@@ -327,7 +331,7 @@ def main() -> None:
     elif args.command == "sniff":
         run_sniff_cmd(args)
     elif args.command == "replay":
-        replay_pcap(args.pcap, args.evidence_file)
+        replay_pcap(args.pcap, args.evidence_file, dns_model_path=args.dns_model)
     elif args.command == "scenarios":
         run_scenarios_cmd(args)
 

@@ -32,7 +32,7 @@ scenario results as public-dataset accuracy.
 | Indian hard negatives | SMS evaluation | Evaluation-only | Measures false positives on legitimate Indian messages |
 | UCI SMS Spam Collection derivative | SMS baseline provenance | Documented | Reproducible legacy comparison |
 | ISCX-URL2016 | URL benchmark/training candidate | Planned | Labels benign, phishing, malware, spam and defacement URLs |
-| CIC-Bell-DNS-EXF-2021 | DNS benchmark/training candidate | Planned | Matches entropy, label-length and windowed DNS features |
+| CIC-Bell-DNS-EXF-2021 | DNS benchmark/training candidate | Benchmark evaluated; runtime opt-in | Reference model is available behind an explicit DNS model flag; default rules remain unchanged |
 | CICIDS2017 | Network external validation | Planned | PCAP and labelled flows across common attacks |
 | UNSW-NB15 | Cross-dataset validation | Planned | Independent flow schema and nine attack families |
 | PhishTank/OpenPhish | Offline threat intelligence | Planned | Known-bad URL evidence, not balanced ML training data |
@@ -128,8 +128,18 @@ reference model over the 34 finite numeric features achieved:
 - Macro F1: **94.84%**.
 - Weighted F1: **95.89%**.
 
-The exported JSON weights are benchmark artifacts only. Live integration is
-blocked until the runtime can produce the same feature vector from DNS
-queries/windows and the model is tested against Guardian's benign Linux
-scenarios. The report and artifact are in `integration-tests/`.
+The exported JSON weights remain benchmark artifacts by default. Guardian now
+supports an explicit opt-in runtime path (`--dns-model` on `sentinel`, `sniff`,
+or `replay`, or `GUARDIAN_DNS_MODEL` for `guardian_network_pipeline.sh`). The
+existing DNS rules remain authoritative; the model only adds score/evidence
+when it crosses its threshold. This is intentionally disabled by default until
+live feature parity and benign-scenario regression testing are complete. The
+report and artifact are in `integration-tests/`.
+
+Example replay:
+
+```text
+python person-b/guardian_net/cli.py replay --pcap path/to/sample.pcap \
+    --dns-model integration-tests/cic_bell_dns_exf.reference.model.json
+```
 

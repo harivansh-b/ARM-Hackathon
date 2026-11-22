@@ -2,6 +2,7 @@
 import base64
 import hashlib
 import hmac
+import json
 import sys
 import time
 import unittest
@@ -48,6 +49,28 @@ class TestDetectors(unittest.TestCase):
         # Privacy check: raw subdomain must NOT be stored in metadata
         self.assertNotIn("a9f8e7d6c5b4a392817203948576a1b2c3d4e5", str(t1))
         self.assertIn("subdomain_sample_hash", t1["metadata"])
+
+    def test_dns_tunnel_detector_optional_model(self) -> None:
+        artifact = {
+            "format": "guardian.network.dns.logistic.v1",
+            "feature_columns": ["entropy"],
+            "means": [0.0],
+            "scales": [1.0],
+            "weights": [1.0],
+            "bias": 0.0,
+            "threshold": 0.5,
+        }
+        model_path = ROOT / "tests" / "_dns_model_test.json"
+        model_path.write_text(json.dumps(artifact), encoding="utf-8")
+        try:
+            det = DNSTunnelDetector(model_path=model_path)
+            event = det.analyze_query("z9x8c7v6b5n4m3.example.com", TYPE_A)
+            self.assertIsNotNone(event)
+            self.assertGreater(event["metadata"]["model_score"], 0.5)
+            self.assertEqual(event["metadata"]["model_threshold"], 0.5)
+            self.assertTrue(any("Runtime DNS model score" in reason for reason in event["reasons"]))
+        finally:
+            model_path.unlink(missing_ok=True)
 
     def test_dga_detector(self) -> None:
         det = DGADetector(entropy_threshold=3.2, consonant_ratio_threshold=0.8)
