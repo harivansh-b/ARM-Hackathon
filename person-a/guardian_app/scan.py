@@ -18,7 +18,7 @@ from .advisor import LlamaRunner, explain  # noqa: E402
 from .importers import load_messages  # noqa: E402
 
 
-def scan(messages: list[dict], runtime: SMSRuntime, runner: LlamaRunner | None, max_llm: int = 20) -> list[dict]:
+def scan(messages: list[dict], runtime: SMSRuntime, runner: LlamaRunner | None, max_llm: int = 20, net_records: list[dict] | None = None) -> list[dict]:
     results, llm_used = [], 0
     for message in messages:
         evidence = runtime.analyze(message["text"], sender=message.get("sender"))
@@ -33,7 +33,7 @@ def scan(messages: list[dict], runtime: SMSRuntime, runner: LlamaRunner | None, 
             links = correlate([evidence] + url_ev)
             story = [{"from": l.source_id, "to": l.target_id, "relation": l.relation} for l in links] + \
                     [{"url_evidence": u["entity"]["value"], "tier": u["risk_tier"], "reasons": u["reasons"]} for u in url_ev]
-        results.append({"actions": approved_actions(evidence) if flagged else [], "story": story, "id": message["id"], "sender": message.get("sender"), "state": evidence["decision_state"],
+        results.append({"actions": approved_actions(evidence) if flagged else [], "network_linked": bool(net_records and evidence.get("extracted_urls")), "story": story, "id": message["id"], "sender": message.get("sender"), "state": evidence["decision_state"],
                         "risk_tier": evidence["risk_tier"], "score": evidence["score"], "signals": [s["signal"] for s in evidence["matched_signals"]],
                         "urls": evidence["extracted_urls"], "detect_ms": evidence["latency_ms"], "advice": advice})
     return results

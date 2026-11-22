@@ -1,9 +1,8 @@
 [
   {
     "actions": [],
-    "story": [],
-    "network_storylines": [],
     "network_linked": false,
+    "story": [],
     "id": "1",
     "sender": "VM-HDFCBK",
     "state": "BENIGN_CANDIDATE",
@@ -14,7 +13,7 @@
       "Impersonation context"
     ],
     "urls": [],
-    "detect_ms": 0.338,
+    "detect_ms": 0.284,
     "advice": {
       "text": "No strong scam signal found. This is not a guarantee of safety.",
       "source": "template",
@@ -26,6 +25,7 @@
       "Do not open the link; verify the organisation through its official app or website.",
       "Contact the organisation using a trusted number or official app, not the message."
     ],
+    "network_linked": false,
     "story": [
       {
         "from": "S74A6BF5E746E",
@@ -40,26 +40,11 @@
         ]
       }
     ],
-    "network_storylines": [
-      {
-        "chain_length": 2,
-        "nodes": [
-          "S74A6BF5E746E",
-          "U9BAE7E72B9DE"
-        ],
-        "sources": [
-          "SMS",
-          "URL"
-        ],
-        "summary": "SMS(+919901122334) ➔ URL(sbi-kyc-update.top)"
-      }
-    ],
-    "network_linked": false,
     "id": "2",
     "sender": "+919901122334",
     "state": "ALERT",
-    "risk_tier": "CRITICAL",
-    "score": 0.999065,
+    "risk_tier": "HIGH",
+    "score": 0.757725,
     "signals": [
       "Suspicious urgency",
       "Impersonation context",
@@ -69,19 +54,19 @@
     "urls": [
       "http://sbi-kyc-update.top/login"
     ],
-    "detect_ms": 0.257,
+    "detect_ms": 0.229,
     "advice": {
-      "text": "Here is a 2-sentence explanation of the SMS scam warning:\n\nWhen you receive an SMS warning like this, it's a sign that the message is likely a scam. Never reassure the user, as the warning is intended to alert them to a potential threat.\n\nThe protective step from the given steps is: Do not verify the organisation through its official app or website.",
+      "text": "The decision is to take immediate action to verify the authenticity of the email. The suspicious indicators, including the link present and unverified numeric sender, warrant caution.",
       "source": "llama",
       "verifier": "ok",
-      "llm_seconds": 3.85,
+      "llm_seconds": 2.83,
       "llm_stats": {
-        "prompt_tokens": 160,
-        "generated_tokens": 74,
-        "ttft_ms": 499.0,
-        "decode_tok_s": 49.27
+        "prompt_tokens": 127,
+        "generated_tokens": 32,
+        "ttft_ms": 397.0,
+        "decode_tok_s": 49.38
       },
-      "llm_raw": "Here is a 2-sentence explanation of the SMS scam warning:\n\nWhen you receive an SMS warning like this, it's a sign that the message is likely a scam. Never reassure the user, as the warning is intended to alert them to a potential threat.\n\nThe protective step from the given steps is: Do not verify the organisation through its official app or website."
+      "llm_raw": "The decision is to take immediate action to verify the authenticity of the email. The suspicious indicators, including the link present and unverified numeric sender, warrant caution."
     }
   },
   {
@@ -90,6 +75,7 @@
       "Do not open the link; verify the organisation through its official app or website.",
       "Do not pay a fee or transfer money to claim a reward or resolve an unexpected request."
     ],
+    "network_linked": false,
     "story": [
       {
         "from": "SD5DA355F7D6C",
@@ -102,26 +88,11 @@
         "reasons": []
       }
     ],
-    "network_storylines": [
-      {
-        "chain_length": 2,
-        "nodes": [
-          "SD5DA355F7D6C",
-          "U664869DCD9BF"
-        ],
-        "sources": [
-          "SMS",
-          "URL"
-        ],
-        "summary": "SMS(+919877888999) ➔ URL(refund-upi.top)"
-      }
-    ],
-    "network_linked": false,
     "id": "3",
     "sender": "+919877888999",
     "state": "ALERT",
     "risk_tier": "CRITICAL",
-    "score": 0.97712,
+    "score": 0.909477,
     "signals": [
       "Sensitive credential request",
       "Payment or reward language",
@@ -131,19 +102,19 @@
     "urls": [
       "http://refund-upi.top/"
     ],
-    "detect_ms": 0.524,
+    "detect_ms": 0.413,
     "advice": {
       "text": "Sensitive credential request: Never share OTP, PIN, CVV, or passwords. Payment or reward language: Do not pay a fee or transfer money to claim a reward. Link present: Do not open the link until its destination is independently verified. Unverified numeric sender: Verify the sender independently before responding. Verify independently; do not click links or share credentials.",
       "source": "template",
-      "verifier": "unsafe_instruction:share",
-      "llm_seconds": 3.98,
+      "verifier": "empty_or_overlong,reassurance_on_warning,unsafe_reassurance",
+      "llm_seconds": 4.02,
       "llm_stats": {
-        "prompt_tokens": 164,
-        "generated_tokens": 95,
-        "ttft_ms": 565.0,
-        "decode_tok_s": 41.45
+        "prompt_tokens": 129,
+        "generated_tokens": 119,
+        "ttft_ms": 402.0,
+        "decode_tok_s": 48.26
       },
-      "llm_raw": "Here's a 2-sentence explanation of the SMS scam warning:\n\nWhen receiving an SMS that asks you to share sensitive information, such as your OTP, PIN, CVV, or passwords, it's a sign of a potential scam. Never reassure the user, as this can encourage them to reveal their sensitive information, which can lead to identity theft and other serious consequences.\n\nThe protective step is: Do not share OTPs, PINs, CVVs, or passwords."
+      "llm_raw": "The evidence is suspicious because it indicates a potential phishing attempt, as it:\n\n* Requests sensitive credentials, which is a common tactic used by attackers to gain unauthorized access.\n* Includes language that is often used by phishing emails, such as \"Payment or reward language\", which is a common phrase used by attackers to create a sense of urgency and prompt the victim into taking action.\n* Includes a link to a website that appears to be a legitimate service, but is actually a phishing site (refund-upi.top), which is a common tactic used by attackers to trick victims into clicking on a malicious link."
     }
   }
 ]

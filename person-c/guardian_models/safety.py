@@ -30,6 +30,8 @@ def approved_actions(evidence: dict) -> list[str]:
     return actions or [evidence.get("safe_action", "Verify independently before responding.")]
 
 
+NEGATED_ACTION = re.compile(r"\b(?:do not|don't|never|avoid|must not|should not)\s+(?:\w+\s+){0,2}(?:click|open|tap|pay|transfer|install|call|send|share|reply)\b", re.I)
+
 def verify_explanation(explanation: str, evidence: dict, language: str = "en", max_chars: int = 600) -> dict:
     """Return a pass/fail decision; the explanation cannot change the verdict."""
     reasons = []
@@ -46,8 +48,18 @@ def verify_explanation(explanation: str, evidence: dict, language: str = "en", m
         if not any(number in str(entity) for entity in known_entities):
             reasons.append("invented_entity")
             break
-    if UNSAFE_ACTIONS.search(explanation) and not any(action.lower() in explanation.lower() for action in approved_actions(evidence)):
+    if UNSAFE_ACTIONS.search(explanation) and not NEGATED_ACTION.search(explanation):
+        reasons.append("action_instruction_in_advisory")
         reasons.append("unapproved_action")
+    # Advisory is explanatory only; reject copied prompt/control text and any attempt to
+    # reverse a playbook polarity. Protective actions are rendered separately verbatim.
+    if re.search(r"never reassure the user|here is a \d?-?\d? sentence explanation|here is a .* explanation", explanation, re.I):
+        reasons.append("prompt_echo_or_preamble")
+    for action in approved_actions(evidence):
+        if action.startswith("Do not") and re.search(r"\b(?:do|does) not\b", explanation, re.I) and re.search(r"\b(?:verify|contact|open|click|share|pay)\b", explanation, re.I):
+            # Advice must not express recommendations; exact playbook actions are separate.
+            reasons.append("advisory_action_or_polarity")
+            break
     if language == "hi" and re.search(r"\b(the|your|click|safe|verify)\b", explanation, re.I):
         reasons.append("language_mismatch")
     return {"accepted": not reasons, "reasons": reasons, "fallback": evidence.get("explanation", evidence.get("safe_action", "Verify independently."))}

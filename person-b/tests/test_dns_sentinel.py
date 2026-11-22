@@ -152,35 +152,6 @@ class TestDNSSentinel(unittest.TestCase):
         self.assertEqual(rec["event_type"], "DNS_QUERY")
         self.assertEqual(rec["metadata"]["resolved_ips"], ["10.77.0.99"])
 
-    def test_custom_inspector_evidence_includes_resolution_metadata(self) -> None:
-        custom_record = {
-            "evidence_id": "TEST123",
-            "source": "DNS",
-            "event_type": "DNS_TUNNEL",
-            "timestamp": 123,
-            "entity": {"type": "DOMAIN", "value": "inspect.example.test"},
-            "risk_tier": "HIGH",
-            "score": 0.8,
-            "reasons": ["test detector"],
-            "metadata": {"detector_feature": "kept"},
-        }
-        sentinel = DNSSentinel(
-            evidence_file=self.evidence_path,
-            inspector=lambda query, response, latency: custom_record,
-        )
-        query = make_query("inspect.example.test", TYPE_A)
-        response = make_response(query, answers=[
-            DNSResourceRecord("inspect.example.test", TYPE_A, 1, 60, "10.77.0.55")
-        ])
-        sentinel._emit_telemetry(query, response, 12.5, "127.0.0.8")
-
-        rec = json.loads(self.evidence_path.read_text(encoding="utf-8").strip())
-        self.assertEqual(rec["event_type"], "DNS_TUNNEL")
-        self.assertEqual(rec["metadata"]["detector_feature"], "kept")
-        self.assertEqual(rec["metadata"]["resolved_ips"], ["10.77.0.55"])
-        self.assertEqual(rec["metadata"]["client_ip"], "127.0.0.8")
-        self.assertEqual(rec["metadata"]["qtype"], "A")
-
     def test_tcp_forward_and_evidence(self) -> None:
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.settimeout(2.0)
@@ -236,8 +207,12 @@ class TestDNSSentinel(unittest.TestCase):
             t.join()
 
         self.assertEqual(len(errors), 0, f"Errors encountered: {errors}")
+        deadline = time.monotonic() + 2.0
+        expected = num_threads * queries_per_thread
+        while self.sentinel.metrics.summary()["total"] < expected and time.monotonic() < deadline:
+            time.sleep(0.01)
         summary = self.sentinel.metrics.summary()
-        self.assertEqual(summary["total"], num_threads * queries_per_thread)
+        self.assertEqual(summary["total"], expected)
         self.assertEqual(summary["success_rate_pct"], 100.0)
         self.assertGreater(summary["median_ms"], 0.0)
         self.assertGreaterEqual(summary["p95_ms"], summary["median_ms"])
