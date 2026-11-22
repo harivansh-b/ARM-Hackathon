@@ -40,29 +40,29 @@
     {
       "id": "cic-bell-dns-exf-2021",
       "role": "dns_benchmark",
-      "status": "adapter_implemented_benchmark_pending",
+      "status": "evaluated_opt_in_runtime",
       "source": "https://www.unb.ca/cic/datasets/dns-exf-2021.html",
-      "notes": "Downloaded feature CSV snapshot; stateless baseline is weak, while a reference logistic model is benchmarked but not yet live-integrated."
+      "notes": "Downloaded feature CSV snapshot; reference logistic model is available behind --dns-model, while default rules remain unchanged pending live parity."
     },
     {
       "id": "cicids2017",
       "role": "network_external_validation",
-      "status": "adapter_implemented_benchmark_pending",
+      "status": "processed_reference_benchmark",
       "source": "https://www.unb.ca/cic/datasets/ids-2017.html",
-      "notes": "Use with a feature adapter; do not merge raw flow columns into Guardian evidence."
+      "notes": "Pinned public mirror of labeled flow CSVs processed locally; results are reference benchmarks, not live Guardian accuracy."
     },
     {
       "id": "unsw-nb15",
       "role": "network_cross_dataset_validation",
-      "status": "adapter_implemented_benchmark_pending",
+      "status": "processed_reference_benchmark",
       "source": "https://research.unsw.edu.au/projects/unsw-nb15-dataset",
-      "notes": "Use the official train/test split and preserve attack-family labels."
+      "notes": "Pinned public mirror of the train/test partitions processed locally; attack labels are preserved and results are reference benchmarks."
     },
     {
       "id": "phishtank-openphish",
       "role": "offline_threat_intelligence",
-      "status": "planned",
-      "notes": "Frozen snapshots for local lookup; not a balanced classifier-training set."
+      "status": "openphish_frozen_bundle; phishtank_pending_key",
+      "notes": "OpenPhish public snapshot is normalized into a signed offline domain bundle; PhishTank requires an application key after rate limiting."
     }
   ]
 }

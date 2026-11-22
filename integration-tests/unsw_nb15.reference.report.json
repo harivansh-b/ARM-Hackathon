@@ -1,0 +1,101 @@
+{
+  "dataset": "unsw-nb15",
+  "train_records": 175341,
+  "test_records": 82332,
+  "feature_count": 39,
+  "feature_columns": [
+    "ackdat",
+    "ct_dst_ltm",
+    "ct_dst_sport_ltm",
+    "ct_dst_src_ltm",
+    "ct_flw_http_mthd",
+    "ct_ftp_cmd",
+    "ct_src_dport_ltm",
+    "ct_src_ltm",
+    "ct_srv_dst",
+    "ct_srv_src",
+    "ct_state_ttl",
+    "dbytes",
+    "dinpkt",
+    "djit",
+    "dload",
+    "dloss",
+    "dmean",
+    "dpkts",
+    "dtcpb",
+    "dttl",
+    "dur",
+    "dwin",
+    "is_ftp_login",
+    "is_sm_ips_ports",
+    "rate",
+    "response_body_len",
+    "sbytes",
+    "sinpkt",
+    "sjit",
+    "sload",
+    "sloss",
+    "smean",
+    "spkts",
+    "stcpb",
+    "sttl",
+    "swin",
+    "synack",
+    "tcprtt",
+    "trans_depth"
+  ],
+  "label_counts": {
+    "0": 37000,
+    "1": 45332
+  },
+  "by_label": {
+    "0": {
+      "count": 37000,
+      "attacks_detected": 0,
+      "missed": 0
+    },
+    "1": {
+      "count": 45332,
+      "attacks_detected": 38386,
+      "missed": 6946
+    }
+  },
+  "confusion_matrix": [
+    [
+      24860,
+      12140
+    ],
+    [
+      6946,
+      38386
+    ]
+  ],
+  "classification_report": {
+    "0": {
+      "precision": 0.7816135320379802,
+      "recall": 0.6718918918918919,
+      "f1-score": 0.7226114001685899,
+      "support": 37000.0
+    },
+    "1": {
+      "precision": 0.7597276649645727,
+      "recall": 0.8467749051442689,
+      "f1-score": 0.8008929875440756,
+      "support": 45332.0
+    },
+    "accuracy": 0.7681824806879464,
+    "macro avg": {
+      "precision": 0.7706705985012765,
+      "recall": 0.7593333985180803,
+      "f1-score": 0.7617521938563327,
+      "support": 82332.0
+    },
+    "weighted avg": {
+      "precision": 0.7695631734147024,
+      "recall": 0.7681824806879464,
+      "f1-score": 0.7657132429381756,
+      "support": 82332.0
+    }
+  },
+  "note": "Reference benchmark only; scores do not represent live Guardian runtime accuracy."
+}

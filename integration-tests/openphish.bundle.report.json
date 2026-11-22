@@ -1,0 +1,10 @@
+{
+  "bundle": "integration-tests\\openphish.bundle.json",
+  "malicious_urls": 300,
+  "benign_urls": 20,
+  "matched_malicious": 300,
+  "matched_benign": 0,
+  "lookup_recall": 1.0,
+  "lookup_false_positive_rate": 0.0,
+  "note": "Lookup integrity evaluation; this is not a population-level phishing prevalence estimate."
+}

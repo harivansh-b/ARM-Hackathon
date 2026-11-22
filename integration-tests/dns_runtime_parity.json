@@ -1,0 +1,55 @@
+{
+  "model": "integration-tests\\cic_bell_dns_exf.reference.model.json",
+  "scenarios": {
+    "benign_linux": {
+      "baseline_alerts": 0,
+      "model_alerts": 0,
+      "baseline_event_types": [],
+      "model_event_types": []
+    },
+    "dns_tunnel": {
+      "baseline_alerts": 2,
+      "model_alerts": 2,
+      "baseline_event_types": [
+        "DNS_TUNNEL"
+      ],
+      "model_event_types": [
+        "DNS_TUNNEL"
+      ]
+    },
+    "exfil_spike": {
+      "baseline_alerts": 2,
+      "model_alerts": 2,
+      "baseline_event_types": [
+        "BEACON",
+        "BEACON/EXFILTRATION"
+      ],
+      "model_event_types": [
+        "BEACON",
+        "BEACON/EXFILTRATION"
+      ]
+    },
+    "port_scan": {
+      "baseline_alerts": 1,
+      "model_alerts": 1,
+      "baseline_event_types": [
+        "PORT_SCAN"
+      ],
+      "model_event_types": [
+        "PORT_SCAN"
+      ]
+    },
+    "smishing_c2_chain": {
+      "baseline_alerts": 1,
+      "model_alerts": 1,
+      "baseline_event_types": [
+        "BEACON"
+      ],
+      "model_event_types": [
+        "BEACON"
+      ]
+    }
+  },
+  "default_unchanged": true,
+  "note": "Parity gate only; this does not establish public-dataset live accuracy."
+}

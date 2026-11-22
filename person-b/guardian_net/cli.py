@@ -22,6 +22,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from guardian_net.aggregate import EvidenceAggregator
+from guardian_net.bundle_hook import load_threat_bundle
 from guardian_net.detectors.beacon import BeaconDetector
 from guardian_net.detectors.denylist import DenylistDetector
 from guardian_net.detectors.dga import DGADetector
@@ -37,10 +38,20 @@ from guardian_net.pcapio import LiveSniffer, ParsedPacket, PcapReader
 DEFAULT_REPORT = ROOT / "reports" / "net_evidence.jsonl"
 
 
+def configure_threat_bundle(detector: DenylistDetector, bundle_path: Path | None, key_path: Path | None) -> None:
+    """Load an offline signed intelligence bundle when explicitly configured."""
+    if not bundle_path:
+        return
+    if not key_path:
+        raise ValueError("--bundle-key-file is required when --threat-bundle is used")
+    load_threat_bundle(bundle_path, key_path.read_bytes().strip(), detector, minimum_version=1)
+
+
 def run_sentinel_cmd(args: argparse.Namespace) -> None:
     tunnel_det = DNSTunnelDetector(model_path=args.dns_model)
     dga_det = DGADetector()
     deny_det = DenylistDetector()
+    configure_threat_bundle(deny_det, args.threat_bundle, args.bundle_key_file)
 
     def inspector(query: DNSMessage, resp: DNSMessage | None, latency_ms: float) -> dict | None:
         if not query or not query.questions:
@@ -95,6 +106,8 @@ def replay_pcap(
     evidence_file: str | Path | None = None,
     silent: bool = False,
     dns_model_path: str | Path | None = None,
+    threat_bundle_path: str | Path | None = None,
+    bundle_key_path: str | Path | None = None,
 ) -> list[dict]:
     """Replay a PCAP file through the complete flow and detection pipeline."""
     reader = PcapReader(pcap_path)
@@ -105,6 +118,11 @@ def replay_pcap(
     scan_det = OutboundScanDetector()
     exfil_det = ExfiltrationDetector()
     deny_det = DenylistDetector()
+    configure_threat_bundle(
+        deny_det,
+        Path(threat_bundle_path) if threat_bundle_path else None,
+        Path(bundle_key_path) if bundle_key_path else None,
+    )
     aggregator = EvidenceAggregator()
 
     emitted_alerts: list[dict] = []
@@ -241,6 +259,7 @@ def run_sniff_cmd(args: argparse.Namespace) -> None:
     scan_det = OutboundScanDetector()
     exfil_det = ExfiltrationDetector()
     deny_det = DenylistDetector()
+    configure_threat_bundle(deny_det, args.threat_bundle, args.bundle_key_file)
     aggregator = EvidenceAggregator()
     emitted = 0
     packet_count = 0
@@ -307,6 +326,8 @@ def main() -> None:
     p_sent.add_argument("--upstream-port", type=int, default=53)
     p_sent.add_argument("--evidence-file", default=DEFAULT_REPORT)
     p_sent.add_argument("--dns-model", type=Path, help="Optional offline DNS model artifact")
+    p_sent.add_argument("--threat-bundle", type=Path, help="Optional signed offline threat-intelligence bundle")
+    p_sent.add_argument("--bundle-key-file", type=Path, help="Key file for the prototype bundle verifier")
 
     # live sniff
     p_sniff = subparsers.add_parser("sniff", help="Capture live packets and run detectors")
@@ -314,12 +335,16 @@ def main() -> None:
     p_sniff.add_argument("--evidence-file", type=Path, default=DEFAULT_REPORT)
     p_sniff.add_argument("--quiet", action="store_true", help="Suppress alert lines")
     p_sniff.add_argument("--dns-model", type=Path, help="Optional offline DNS model artifact")
+    p_sniff.add_argument("--threat-bundle", type=Path, help="Optional signed offline threat-intelligence bundle")
+    p_sniff.add_argument("--bundle-key-file", type=Path, help="Key file for the prototype bundle verifier")
 
     # replay
     p_rep = subparsers.add_parser("replay", help="Replay PCAP file")
     p_rep.add_argument("--pcap", required=True, type=Path, help="Path to pcap file")
     p_rep.add_argument("--evidence-file", default=DEFAULT_REPORT)
     p_rep.add_argument("--dns-model", type=Path, help="Optional offline DNS model artifact")
+    p_rep.add_argument("--threat-bundle", type=Path, help="Optional signed offline threat-intelligence bundle")
+    p_rep.add_argument("--bundle-key-file", type=Path, help="Key file for the prototype bundle verifier")
 
     # scenarios
     p_scen = subparsers.add_parser("scenarios", help="Run scenario test suite")
@@ -331,7 +356,13 @@ def main() -> None:
     elif args.command == "sniff":
         run_sniff_cmd(args)
     elif args.command == "replay":
-        replay_pcap(args.pcap, args.evidence_file, dns_model_path=args.dns_model)
+        replay_pcap(
+            args.pcap,
+            args.evidence_file,
+            dns_model_path=args.dns_model,
+            threat_bundle_path=args.threat_bundle,
+            bundle_key_path=args.bundle_key_file,
+        )
     elif args.command == "scenarios":
         run_scenarios_cmd(args)
 

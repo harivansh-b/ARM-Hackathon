@@ -33,9 +33,9 @@ scenario results as public-dataset accuracy.
 | UCI SMS Spam Collection derivative | SMS baseline provenance | Documented | Reproducible legacy comparison |
 | ISCX-URL2016 | URL benchmark/training candidate | Planned | Labels benign, phishing, malware, spam and defacement URLs |
 | CIC-Bell-DNS-EXF-2021 | DNS benchmark/training candidate | Benchmark evaluated; runtime opt-in | Reference model is available behind an explicit DNS model flag; default rules remain unchanged |
-| CICIDS2017 | Network external validation | Planned | PCAP and labelled flows across common attacks |
-| UNSW-NB15 | Cross-dataset validation | Planned | Independent flow schema and nine attack families |
-| PhishTank/OpenPhish | Offline threat intelligence | Planned | Known-bad URL evidence, not balanced ML training data |
+| CICIDS2017 | Network external validation | Processed reference benchmark | DDoS and PortScan flow files normalized with attack-family metrics |
+| UNSW-NB15 | Cross-dataset validation | Processed reference benchmark | Train/test-shaped partitions normalized with binary attack metrics |
+| PhishTank/OpenPhish | Offline threat intelligence | OpenPhish signed bundle; PhishTank pending key | Known-bad domain evidence, not balanced ML training data |
 
 ## Evaluation gates
 
@@ -142,4 +142,37 @@ Example replay:
 python person-b/guardian_net/cli.py replay --pcap path/to/sample.pcap \
     --dns-model integration-tests/cic_bell_dns_exf.reference.model.json
 ```
+
+### Network validation and offline threat bundle
+
+Reference reports are generated with:
+
+```text
+python person-b/eval/evaluate_network_benchmark.py integration-tests/unsw_nb15_training.normalized.jsonl \
+    --test-jsonl integration-tests/unsw_nb15_testing.normalized.jsonl \
+    --output integration-tests/unsw_nb15.reference.report.json
+python person-b/eval/evaluate_dns_runtime_parity.py \
+    --dns-model integration-tests/cic_bell_dns_exf.reference.model.json \
+    --output integration-tests/dns_runtime_parity.json
+```
+
+The OpenPhish snapshot is converted into a signed domain bundle by
+`person-c/tools/build_threat_bundle.py`. The CLI can load it explicitly with
+`--threat-bundle` and `--bundle-key-file`; it is never fetched or queried at
+runtime. PhishTank remains pending an application key because its public feed
+rate-limited the evaluation download.
+
+The current local reference results are:
+
+| Benchmark | Result |
+|---|---|
+| UNSW-NB15 official-shaped train/test partitions | Attack recall 84.68%, benign recall 67.19%, macro F1 76.18% |
+| CICIDS2017 DDoS sample | Attack recall 99.92%, benign recall 99.78%, macro F1 99.86% |
+| CICIDS2017 PortScan sample | Attack recall 99.90%, benign recall 99.41%, macro F1 98.80% |
+| OpenPhish frozen lookup bundle | 300/300 malicious-feed URLs matched; 0/20 curated benign URLs matched |
+
+The network classifier scores are reference evidence only: they use dataset
+flow features that are not yet identical to Guardian's live packet windows.
+The OpenPhish score is a lookup-integrity result, not a population-level
+phishing detection accuracy estimate.
 
