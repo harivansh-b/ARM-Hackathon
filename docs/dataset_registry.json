@@ -42,7 +42,7 @@
       "role": "dns_benchmark",
       "status": "adapter_implemented_benchmark_pending",
       "source": "https://www.unb.ca/cic/datasets/dns-exf-2021.html",
-      "notes": "Downloaded feature CSV snapshot; baseline report exists, but current stateless thresholds have low recall."
+      "notes": "Downloaded feature CSV snapshot; stateless baseline is weak, while a reference logistic model is benchmarked but not yet live-integrated."
     },
     {
       "id": "cicids2017",

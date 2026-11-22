@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import math
 import json
 import re
 from pathlib import Path
@@ -37,6 +38,8 @@ def numeric(value: str) -> int | float | None:
     try:
         number = float(clean)
     except ValueError:
+        return None
+    if not math.isfinite(number):
         return None
     return int(number) if number.is_integer() else number
 

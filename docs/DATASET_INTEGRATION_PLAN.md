@@ -113,8 +113,23 @@ Two local benchmark files have now been downloaded under the gitignored
 | Benchmark | Current result | Decision |
 |---|---|---|
 | ISCX-URL2016 feature CSV | 36,707 records across five classes; the current URL runtime cannot consume it because it has no raw URL column. The dependency-free feature baseline achieved 0% recall at the selected <=5% false-positive operating point. | Do not wire into runtime yet; obtain raw URL strings or build a separately validated numeric URL model. |
-| CIC-Bell-DNS-EXF-2021 | 100,000-row diagnostic sample: precision 77.7%, recall 1.25%, FPR 0.92% using current stateless thresholds. | Do not claim improvement yet; retune or train a DNS model using the benchmark's feature schema and evaluate by day/category. |
+| CIC-Bell-DNS-EXF-2021 | Current stateless rules: precision 77.7%, recall 1.25%, FPR 0.92%. Reference logistic model: attack recall 98.59%, benign recall 89.10%, macro F1 94.84%. | Keep the reference model benchmark-only until live feature parity and Guardian scenario regression tests pass. |
 
 These failures are useful evidence: adding a public benchmark without adapting
 the feature schema would make the submission less credible, not more.
+
+### DNS reference-model result
+
+Using the same normalized 100,000-row sample, a balanced standardized logistic
+reference model over the 34 finite numeric features achieved:
+
+- Attack recall: **98.59%**.
+- Benign recall: **89.10%**.
+- Macro F1: **94.84%**.
+- Weighted F1: **95.89%**.
+
+The exported JSON weights are benchmark artifacts only. Live integration is
+blocked until the runtime can produce the same feature vector from DNS
+queries/windows and the model is tested against Guardian's benign Linux
+scenarios. The report and artifact are in `integration-tests/`.
 

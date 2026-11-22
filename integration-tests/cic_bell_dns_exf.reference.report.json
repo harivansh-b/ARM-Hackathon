@@ -1,0 +1,47 @@
+{
+  "dataset": "integration-tests\\cic_bell_dns_exf.normalized.jsonl",
+  "records": 100000,
+  "feature_count": 34,
+  "split": {
+    "train": 75000,
+    "test": 25000
+  },
+  "confusion_matrix": [
+    [
+      6231,
+      762
+    ],
+    [
+      254,
+      17753
+    ]
+  ],
+  "classification_report": {
+    "0": {
+      "precision": 0.9608326908249807,
+      "recall": 0.8910338910338911,
+      "f1-score": 0.9246178958302419,
+      "support": 6993.0
+    },
+    "1": {
+      "precision": 0.9588441803942749,
+      "recall": 0.9858943744099516,
+      "f1-score": 0.9721811510870161,
+      "support": 18007.0
+    },
+    "accuracy": 0.95936,
+    "macro avg": {
+      "precision": 0.9598384356096278,
+      "recall": 0.9384641327219214,
+      "f1-score": 0.948399523458629,
+      "support": 25000.0
+    },
+    "weighted avg": {
+      "precision": 0.9594004065319519,
+      "recall": 0.95936,
+      "f1-score": 0.9588767573265912,
+      "support": 25000.0
+    }
+  },
+  "note": "Reference benchmark model; not yet wired into live Guardian DNS inference."
+}
