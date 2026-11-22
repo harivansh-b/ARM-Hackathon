@@ -76,7 +76,7 @@ Set the command for your local ExecuTorch build.
 Example:
 
 ```bash
-export GUARDIAN_LLAMA_CMD="/home/dev/executorch/cmake-out/examples/models/llama/llama_main --model_path=/home/dev/executorch/llama3_2.pte --tokenizer_path=/home/dev/models/llama-3.2-1b-spinquant/tokenizer.model --temperature 0 --seq_len 512 --prompt {prompt}"
+export GUARDIAN_LLAMA_CMD="./runtime/executorch/llama_main --model_path=./models/llama/llama3_2.pte --tokenizer_path=./models/llama/tokenizer.model --temperature 0 --seq_len 512 --prompt {prompt}"
 ```
 
 **Important:** Keep `{prompt}` literal. The application substitutes the generated prompt at runtime.

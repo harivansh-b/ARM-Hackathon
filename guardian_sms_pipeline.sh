@@ -36,7 +36,7 @@ if [[ ! -f "$ARTIFACT" ]]; then
     (cd "$ROOT/person-c" && python3 -m guardian_models.train_sms "$TRAINING_DATA" artifacts/sms.json)
 fi
 
-DEFAULT_LLAMA_CMD="/home/dev/executorch/cmake-out/examples/models/llama/llama_main --model_path /home/dev/executorch/llama3_2.pte --tokenizer_path /home/dev/models/llama-3.2-1b-spinquant/tokenizer.model --temperature 0 --seq_len 512 --max_new_tokens 128 --prompt {prompt}"
+DEFAULT_LLAMA_CMD="\"$ROOT/runtime/executorch/llama_main\" --model_path \"$ROOT/models/llama/llama3_2.pte\" --tokenizer_path \"$ROOT/models/llama/tokenizer.model\" --temperature 0 --seq_len 512 --max_new_tokens 128 --prompt {prompt}"
 
 LLAMA_CMD="${GUARDIAN_LLAMA_CMD:-$DEFAULT_LLAMA_CMD}"
 
