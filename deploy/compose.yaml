@@ -1,0 +1,25 @@
+
+services:
+  guardian:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+
+    container_name: guardian
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:${GUARDIAN_SSH_PORT:-2222}:22"
+      - "127.0.0.1:${GUARDIAN_PORT:-8080}:8080"
+
+    volumes:
+      - guardian_reports:/opt/guardian/person-b/reports
+
+    secrets:
+      - guardian_ssh_password
+
+volumes:
+  guardian_reports:
+secrets:
+  guardian_ssh_password:
+    file: ./secrets/guardian_ssh_password

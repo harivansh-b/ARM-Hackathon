@@ -12,3 +12,5 @@ integration-tests/*.normalized.jsonl
 integration-tests/*.manifest.json
 
 .DS_Store
+deploy/secrets/
+deploy/.env
