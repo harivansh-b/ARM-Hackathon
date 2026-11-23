@@ -92,7 +92,7 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/sensor/upload":
                 return self._json(self._upload_pcap())
             if path == "/api/sustained/start":
-                core.SUSTAINED.start(bool(self._body().get("llama")))
+                core.SUSTAINED.start()
                 return self._json(core.SUSTAINED.status())
             if path == "/api/sustained/stop":
                 core.SUSTAINED.stop()
@@ -121,8 +121,8 @@ class Handler(BaseHTTPRequestHandler):
     def _import(self):
         item = self._file()
         suffix = Path(item.filename).suffix.lower()
-        if suffix not in (".csv", ".xml", ".json", ".jsonl", ".txt"):
-            raise ValueError("supported formats: CSV, XML, JSON, JSONL, TXT")
+        if suffix not in (".csv", ".json", ".jsonl", ".txt"):
+            raise ValueError("supported formats: CSV, JSON, JSONL, TXT")
         with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as t:
             t.write(item.file.read())
         try:

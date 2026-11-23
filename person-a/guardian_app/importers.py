@@ -1,9 +1,8 @@
-"""Load SMS from local files: csv, json/jsonl, SMS Backup & Restore xml, or plain text."""
+"""Load SMS from local files: csv, json/jsonl, or plain text."""
 from __future__ import annotations
 
 import csv
 import json
-import xml.etree.ElementTree as ET
 from pathlib import Path
 
 TEXT_KEYS = ("text", "body", "message", "sms", "content")
@@ -36,13 +35,11 @@ def load_messages(path: str | Path) -> list[dict]:
         rows = [json.loads(line) for line in raw.splitlines() if line.strip()] if suffix == ".jsonl" else json.loads(raw)
         if isinstance(rows, dict):
             rows = rows.get("messages", [])
-    elif suffix == ".xml":
-        rows = [dict(node.attrib) for node in ET.parse(path).getroot().iter("sms")]
     else:  # .txt: messages separated by blank lines, else one per line
         raw = path.read_text(encoding="utf-8").strip()
         parts = [p.strip() for p in raw.split("\n\n")] if "\n\n" in raw else raw.splitlines()
         rows = [{"text": p} for p in parts]
     items = [item for index, row in enumerate(rows) if (item := _item(row, index))]
     if not items:
-        raise ValueError(f"no messages found in {path}")
+        raise ValueError(f"no messages found in {path.name}")
     return items
