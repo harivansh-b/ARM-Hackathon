@@ -1,77 +1,196 @@
+
 # Person A — Guardian Offline SMS Scanner
 
-An offline-first SMS scanning application for ARM64 Linux. It imports SMS messages from local files, runs Person C's detection pipeline, and uses Llama 3.2 1B through ExecuTorch to explain flagged messages.
+Person A implements Guardian's SMS scanning workflow on ARM Linux. It imports messages from local files, runs the SMS detection runtime, analyses extracted URLs, generates evidence and optionally uses a local Llama model to explain flagged messages.
 
-**The detector makes the security decision. Llama only explains it and cannot change the verdict.**
+**The detector makes the security decision. The Llama advisor only explains it and cannot change the verdict.**
 
-## How it works
+## Responsibilities
 
-1. `guardian_app/importers.py` imports messages from CSV, JSON, Android backup XML, and text files.
-2. `SMSRuntime` from `person-c/guardian_models` analyses each message and returns a decision (`ALERT`, `REVIEW`, or `BENIGN_CANDIDATE`), score, and evidence.
-3. `guardian_app/advisor.py` builds a prompt using structured detection evidence. The raw SMS message is not sent to Llama.
-4. Llama 3.2 1B runs locally through ExecuTorch for `ALERT` and `REVIEW` messages.
-5. The generated explanation is checked using Person C's `safety.verify_explanation` and an additional action-safety check.
-6. If the explanation is empty, unsafe, or rejected, Guardian uses a deterministic template explanation instead.
-7. `guardian_app/scan.py` produces a report containing the detection result, approved protective actions, explanation source, verification status, and SMS-to-URL storyline.
+- Import SMS messages from local files.
+- Run the SMS detection pipeline.
+- Identify extracted URLs and assess them locally.
+- Produce structured detection results.
+- Generate approved protective actions for flagged messages.
+- Optionally generate an explanation using a local Llama runtime.
+- Verify generated explanations and use deterministic fallback text when necessary.
+- Produce scan reports.
 
-The Llama advisor is optional. Detection works independently of it.
+## Architecture
+
+```text
+Local SMS Input
+      |
+      v
+  Importer
+      |
+      v
+ SMS Runtime (Person C)
+      |
+      +----> Decision + Evidence
+      |
+      +----> Extract URLs
+                  |
+                  v
+            URL Analysis
+                  |
+                  v
+         Evidence Storyline
+                  |
+                  v
+       Optional Local Llama
+                  |
+                  v
+        Explanation Verifier
+                  |
+          +-------+-------+
+          |               |
+       Accepted        Fallback
+          |               |
+          +-------+-------+
+                  |
+                  v
+         Structured Results
+```
+
+## Main files
+
+| File | Responsibility |
+|---|---|
+| `guardian_app/scan.py` | Main scanning workflow and CLI |
+| `guardian_app/importers.py` | Local message import and parsing |
+| `guardian_app/advisor.py` | Prompt generation, local Llama execution, explanation verification and fallback |
+| `samples/sms.csv` | Sample SMS input |
+| `tests/test_app.py` | Application tests |
+| `eval/hard_negatives.jsonl` | Hard-negative test input |
+| `eval/extra_samples.jsonl` | Additional evaluation samples |
+| `eval/make_extra_samples.py` | Additional sample generation |
+| `eval/eval_hard_negatives.py` | Hard-negative evaluation |
+| `bench/bench_detect.py` | Detection benchmark |
+| `bench/bench_llm.py` | Advisor benchmark |
+| `bench/manifest.py` | Benchmark manifest support |
+| `bench/offline_check.sh` | Offline verification helper |
+
+## Input formats
+
+The importer supports:
+
+- CSV
+- JSON
+- JSONL
+- Plain text
+
+CSV and JSON inputs support message text fields including:
+
+- `text`
+- `body`
+- `message`
+- `sms`
+- `content`
+
+Sender information may be supplied through:
+
+- `sender`
+- `address`
+- `from`
+- `number`
+
+Plain-text inputs may contain one message per line or messages separated by blank lines.
+
+The importer skips empty messages and raises an error if no messages are found.
+
+## Detection workflow
+
+### 1. Import
+
+`guardian_app/importers.py` loads messages from the provided file and normalizes the imported structure into message records.
+
+### 2. Detection
+
+The scanner loads the SMS runtime from the model artifact supplied through `--artifact`.
+
+Each message is analysed by the runtime, which returns the decision state, risk tier, score, matched signals and evidence.
+
+Decision states include:
+
+- `ALERT`
+- `REVIEW`
+- `BENIGN_CANDIDATE`
+
+### 3. URL analysis
+
+URLs extracted from flagged messages are assessed using Person C's URL analysis logic.
+
+The scanner can produce URL-related evidence and relationships between the SMS and URL entities.
+
+### 4. Protective actions
+
+Approved actions are obtained from the deterministic safety/action logic. These actions are not authored by Llama.
+
+### 5. Explanation
+
+For flagged messages, the scanner can invoke the local Llama advisor, subject to the configured limit.
+
+The prompt is constructed from structured evidence such as decision state, risk tier, signals, URL hosts and language. The raw SMS text is not included in the advisor prompt.
+
+### 6. Verification and fallback
+
+Generated explanations are checked for safety and grounding.
+
+If the generated output is rejected, unavailable or empty, the system uses deterministic fallback text.
 
 ## Requirements
 
-- ARM64 Linux environment
 - Python 3
-- Person C's trained SMS model artifact
-- ExecuTorch `llama_main` executable and a compatible Llama model/tokenizer
-- Python standard library for the Person A application
+- ARM64 Linux environment recommended for the intended deployment
+- Person C's SMS model artifact
+- Local ExecuTorch Llama runtime and compatible model/tokenizer if Llama explanations are enabled
 
-The application is designed to work without network access at runtime.
+The Person A application uses Python standard-library functionality for its own import, scan and advisor orchestration.
 
-## Running the application
+The detection model and runtime are provided by Person C.
 
-Run commands from the repository root.
+## Running the scanner
 
-### 1. Train the SMS detector
+Commands below are run from the repository root.
+
+### Scan without Llama
 
 ```bash
-cd person-c
-python3 tools/prepare_sms_dataset.py data/sms-training.jsonl \
-    data/public_sms.jsonl data/sms_multilingual.jsonl
-python3 -m guardian_models.train_sms \
-    data/sms-training.jsonl \
-    artifacts/sms.json
-cd ..
+python3 -m person_a.guardian_app.scan \
+    --input person-a/samples/sms.csv \
+    --artifact person-c/artifacts/sms.json \
+    --no-llm
 ```
 
-The root `guardian_sms_pipeline.sh` prepares the same merged training input
-automatically when the artifact is missing. Set `GUARDIAN_SMS_TRAINING_DATA`
-to a reviewed JSONL file to override that input. Keep
-`person-c/data/indian_hard_negatives.jsonl` evaluation-only.
+Depending on the repository's package layout and Python import configuration, the equivalent working directory may be `person-a`; the module is implemented under `guardian_app/`.
 
-The merged public-plus-multilingual corpus improved the current hard-set scam
-recall from 60.0% to 86.7%, with held-out F1 remaining approximately 99.7% and
-no change to the measured 26.5% legitimate-message FPR. See
-`../integration-tests/sms_corpus_comparison.json`; these are development
-benchmarks, not production accuracy claims.
-
-### 2. Run Person A tests
+The canonical standalone command from the Person A directory is:
 
 ```bash
 cd person-a
-python3 -m unittest discover -s tests
-```
 
-### 3. Run detection without Llama
-
-```bash
 python3 -m guardian_app.scan \
     --input samples/sms.csv \
     --artifact ../person-c/artifacts/sms.json \
     --no-llm
 ```
 
-### 4. Configure the Llama advisor
+### Scan with Llama
 
-Set the command for your local ExecuTorch build.
+From the `person-a` directory:
+
+```bash
+python3 -m guardian_app.scan \
+    --input samples/sms.csv \
+    --artifact ../person-c/artifacts/sms.json
+```
+
+The advisor is optional. If it is not configured or available, the scanner can fall back to deterministic explanations.
+
+### Configure the Llama runtime
+
+The advisor accepts a command template containing `{prompt}`.
 
 Example:
 
@@ -79,141 +198,95 @@ Example:
 export GUARDIAN_LLAMA_CMD="./runtime/executorch/llama_main --model_path=./models/llama/llama3_2.pte --tokenizer_path=./models/llama/tokenizer.model --temperature 0 --seq_len 512 --prompt {prompt}"
 ```
 
-**Important:** Keep `{prompt}` literal. The application substitutes the generated prompt at runtime.
+Keep `{prompt}` literal in the environment variable. The advisor replaces it with the prompt generated from the evidence.
 
-`--seq_len 512` provides sufficient sequence capacity for the current structured Guardian prompts and leaves room for generated explanations. Ensure the model supports this sequence length.
+The actual executable, model and tokenizer must be compatible with the installed runtime.
 
-### 5. Run the integrated scan
+### Save a report
 
 ```bash
+cd person-a
+
 python3 -m guardian_app.scan \
     --input samples/sms.csv \
     --artifact ../person-c/artifacts/sms.json \
-    --out reports/integration_smoke_test_seq512.json
+    --out reports/scan.json
 ```
 
-The report is saved under `person-a/reports/`.
+### Limit Llama invocations
 
-## Integration smoke-test report
-
-**Latest report:** `reports/integration_smoke_test_seq512.json`
-
-This report was generated after adding `--seq_len 512` to the Llama command.
-
-It contains three test messages:
-
-| Message | Detector decision | Explanation source | Result |
-|---|---|---|---|
-| 1 | BENIGN_CANDIDATE | Template | Llama not invoked |
-| 2 | ALERT | Llama | Generated explanation accepted |
-| 3 | ALERT | Template fallback | Llama explanation rejected |
-
-### What the test established
-
-- The detector processes messages and produces decisions and evidence.
-- Llama is invoked for flagged messages, not benign candidates.
-- Increasing the sequence length resolved the earlier empty-generation problem.
-- Llama execution statistics are now captured in the scan report.
-- The fallback mechanism activates when an explanation is rejected.
-
-### Important verifier finding
-
-The report also exposed a safety-verification issue:
-
-- **Message 2:** Llama advised the user not to verify the organisation through its official app or website. The verifier incorrectly accepted this explanation (`ok`).
-- **Message 3:** Llama generated a correct warning against sharing OTPs, PINs, CVVs, and passwords. The verifier rejected it with `unsafe_instruction:share`.
-
-Therefore, the current verifier must not yet be considered reliable. The accepted explanation in Message 2 demonstrates that an unsafe instruction can pass validation. The verifier logic needs further investigation and testing before the Llama explanations can be trusted.
-
-## Benchmarks and evaluation
-
-Person A includes the following tools:
-
-| Tool | Purpose |
-|---|---|
-| `bench/bench_detect.py` | Detector latency and memory measurements |
-| `bench/bench_llm.py` | Llama latency, throughput, memory, and verifier measurements |
-| `bench/manifest.py` | Device and software environment information |
-| `eval/eval_hard_negatives.py` | False-alarm evaluation on legitimate-message test sets |
-| `eval/make_extra_samples.py` | Generates additional synthetic evaluation/training examples |
-| `bench/offline_check.sh` | Attempts a scan inside an empty network namespace |
-
-### Llama runtime measurements
-
-From the latest integrated scan:
-
-| Metric | Message 2 | Message 3 |
-|---|---:|---:|
-| Llama execution time | 3.90 s | 4.12 s |
-| Prompt tokens | 160 | 164 |
-| Generated tokens | 74 | 95 |
-| Time to first token | 483 ms | 485 ms |
-| Decode throughput | 47.96 tok/s | 38.71 tok/s |
-
-These are measurements from an ARM64 Linux VM running under QEMU on Apple silicon, not a physical ARM development board.
-
-### Detector evaluation
-
-The current small synthetic hard set contains 34 legitimate messages and 15 scam messages.
-
-| Model configuration | Legitimate wrongly alerted | Scams missed |
-|---|---:|---:|
-| Trained on `public_sms.jsonl` only | 9 / 34 (26.5%) | 1 / 15 |
-| Plus 90 template rows, repeated 20 times | 3 / 34 (8.8%) | 1 / 15 |
-
-The held-out F1 score of approximately 0.99 on the larger test set should not be interpreted as a real-world quality claim. Scam and legitimate examples originate from different public datasets, creating a source-distribution bias. The hard-set results are also limited by their small size and partial similarity to the synthetic training examples.
-
-More real, consented, and anonymised legitimate SMS examples are needed for a credible false-positive evaluation.
-
-Person C also provides normalized benchmark reports for UNSW-NB15,
-CICIDS2017, and a signed OpenPhish offline bundle. These enrich the network
-validation and offline threat-intelligence layers but are not silently mixed
-into SMS training.
-
-## Benchmark reproducibility
-
-Before benchmarking, set the following environment variables:
+The scanner supports:
 
 ```bash
-export EXECUTORCH_COMMIT="<commit>"
-export MODEL_NAME="<model-name>"
-export QUANT="<quantisation>"
+--max-llm 20
 ```
 
-Record the device, OS, kernel, Python version, CPU count, memory, model, quantisation, and command used.
+This limits the number of flagged messages for which Llama is used.
 
-For this VM, label results:
+### Run tests
 
-**ARM64 Linux VM on Apple silicon (QEMU).**
+From the repository root:
 
-Do not report VM measurements as physical-board performance.
+```bash
+python3 -m unittest discover -s person-a/tests -v
+```
 
-## Known limitations and next work
+## Report contents
 
-- Legitimate delivery notifications and food-delivery promotions are still sometimes flagged.
-- A part-time-job scam was missed in the current hard-set evaluation.
-- The Llama explanation verifier has demonstrated both false acceptance and false rejection.
-- Llama sometimes repeats internal prompt instructions in its generated explanation.
-- The tokenizer emits a JSON parsing warning during generation; its cause still needs investigation.
-- The empty-network-namespace test has not yet been successfully completed because `unshare -rn` was denied in the VM.
-- CPU temperature is unavailable in the current virtualised environment.
-- Real-world performance requires evaluation on larger, independently sourced datasets.
-- Check the Llama model licence, attribution and naming requirements, and the licences of all datasets before publishing model weights or data.
+The scanner output can include:
 
-## Current project status
+- Message ID
+- Sender
+- Decision state
+- Risk tier
+- Score
+- Matched signals
+- Extracted URLs
+- Detection latency
+- Approved protective actions
+- Advisor explanation
+- Explanation source
+- Verifier status
+- URL/storyline evidence
 
-| Component | Status |
-|---|---|
-| Local SMS import | Implemented |
-| Person C detector integration | Working |
-| URL evidence and storyline | Working |
-| Llama 3.2 1B integration | Working |
-| Sequence-length configuration | Corrected for current prompts |
-| Runtime metrics collection | Working in integrated report |
-| Deterministic fallback | Working |
-| Explanation verifier | Needs improvement |
-| Fully isolated offline test | Not yet verified |
-| Physical ARM device benchmark | Pending |
+## Offline operation
 
-**Overall:** Person A's integrated detection and local explanation pipeline is operational in the ARM64 QEMU environment. The remaining priority is improving explanation safety verification and validating offline operation and performance on physical ARM hardware.
+The detector and message importer do not require a cloud service.
+
+The local advisor is also intended to operate through the local ExecuTorch runtime.
+
+Guardian does not need to open an extracted URL in order to assess it.
+
+## Benchmark and verification tooling
+
+### Detection benchmark
+
+```bash
+python3 bench/bench_detect.py
+```
+
+Check the script's arguments for the specific benchmark input and output options.
+
+### Advisor benchmark
+
+```bash
+python3 bench/bench_llm.py
+```
+
+### Offline verification
+
+```bash
+bash bench/offline_check.sh
+```
+
+These tools should be used according to their actual argument requirements and the local runtime configuration.
+
+## Important limitations
+
+- A `BENIGN_CANDIDATE` result does not guarantee that a message is legitimate.
+- The advisor is not a decision-making authority.
+- Explanation verification is a safety component that requires further validation.
+- Test fixture metrics are not equivalent to real-world performance.
+- The SMS artifact and its training/evaluation metadata should be documented separately from the scanner.
+- Local Llama execution requires compatible runtime assets and configuration.
 

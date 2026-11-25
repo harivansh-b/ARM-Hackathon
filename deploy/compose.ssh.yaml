@@ -1,0 +1,10 @@
+services:
+  guardian:
+    ports:
+      - "127.0.0.1:${GUARDIAN_SSH_PORT:-2222}:22"
+    secrets:
+      - guardian_ssh_password
+
+secrets:
+  guardian_ssh_password:
+    file: ./secrets/guardian_ssh_password

@@ -1,53 +1,47 @@
 flowchart LR
-    subgraph Device[Arm Android phone]
-        subgraph Core[Guardian Core APK - no INTERNET]
-            SMS[SMS receiver]
-            Link[Link Guard]
-            App[App-risk sensor]
-            Norm[Normalizer\n+NFKC, script and URL handling]
-            Lang[Language routing\n+English, Hindi, Hinglish]
-            Cascade[Detector cascade\n+rules -> compact model]
-            Evidence[Evidence records\n+IDs, indicators, scores, provenance]
-            Bundle[Offline bundle validator\nhash, signature, expiry, rollback]
-            Fusion[Entity graph and fusion\n+dedupe, calibration, severity]
-            Store[(Encrypted evidence store)]
-            Alert[Deterministic alert\n+template shown immediately]
-            Llama[Llama service\n+on demand]
-            Verify[Grounding verifier\n+fallback on failure]
-            SMS --> Norm --> Lang --> Cascade
-            Link --> Norm
-            App --> Norm
-            Cascade --> Evidence --> Fusion
-            Fusion --> Store
-            Fusion --> Alert
-            Alert --> Llama --> Verify
-            Verify --> Alert
-            Bundle --> Cascade
-        end
+    User[User] --> UI[Guardian Web UI]
+    UI --> Server[Local HTTP server]
+    Server --> Core[Integration core]
 
-        subgraph Net[Guardian Net APK - INTERNET + VPN]
-            VPN[VpnService]
-            Relay[Fail-open relay\n+protected sockets]
-            Taps[DNS, flow, TLS metadata, UID]
-            VPN --> Relay --> Taps
-        end
-
-        Net -. batched metadata only .-> Evidence
+    subgraph SMS[SMS and URL analysis]
+        Input[Text or imported SMS data]
+        Normalize[Normalize and parse]
+        Rules[Deterministic checks and URL assessment]
+        Model[Local SMS classifier]
+        EvidenceSMS[SMS evidence and verdict]
+        Advisor[Optional local Llama advisor]
+        Verify[Evidence grounding and fallback]
+        Input --> Normalize --> Rules --> Model --> EvidenceSMS
+        EvidenceSMS --> Advisor --> Verify
+        Verify --> EvidenceSMS
     end
 
-    subgraph PersonC[Person C model workstream]
-        Public[Public corpus\n+redacted + provenance + language]
-        Split[Campaign/template split]
-        Train[SMS/URL training]
-        Cal[Calibration\n+operating threshold]
-        Artifact[Signed model artifact\n+hash + runtime config]
-        Public --> Split --> Train --> Cal --> Artifact
+    subgraph Network[Network analysis]
+        PCAP[PCAP replay or authorized live capture]
+        Parse[Packet, DNS, flow and TLS metadata]
+        Detect[Network detectors]
+        Aggregate[Correlate and aggregate findings]
+        Report[Network report and evidence]
+        PCAP --> Parse --> Detect --> Aggregate --> Report
     end
 
-    Artifact -. imported offline .-> Cascade
-    Artifact -. loaded on demand .-> Llama
+    Core --> Input
+    Core --> PCAP
+    EvidenceSMS --> Core
+    Report --> Core
+    Core --> UI
 
-    classDef boundary fill:#eef6ff,stroke:#3169a5,stroke-width:1px;
-    classDef safety fill:#fff3e6,stroke:#b45f06,stroke-width:1px;
-    class Core,Net boundary;
-    class Alert,Verify,Fusion safety;
+    subgraph Workstreams[Development and model workstreams]
+        A[SMS workflow, importers, advisor and tests]
+        B[Network sensor, detectors, PCAP lab and tests]
+        C[SMS model, URL analysis, data preparation and evaluation]
+    end
+
+    A -. implementation .-> SMS
+    B -. implementation .-> Network
+    C -. model and data assets .-> Model
+    C -. URL analysis support .-> Rules
+
+    Deploy[Docker deployment\nARM64 image, webapp and optional SSH]
+    Deploy -. hosts .-> Server
+    Deploy -. persistent volume .-> Report
