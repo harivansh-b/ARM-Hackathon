@@ -191,6 +191,29 @@ This removes the persistent volume and its data.
 
 **Port conflict:** Rerun the setup script and choose an available host port.
 
+## Additional project documentation and test artifacts
+
+After completing the Docker setup, consult the component-specific READMEs for details on each workstream:
+
+- `person-a/README.md` — SMS workflow, imports, advisor, tests and related evaluation details.
+- `person-b/README.md` — network analysis workflow, sensor, detectors and supporting test/PCAP setup.
+- `person-c/README.md` — SMS model, URL analysis, training and evaluation workflow.
+- `person-c/data/README.md` — SMS/model data files, their roles and handling notes.
+- `person-c/evaluation/README.md` — evaluation procedures, outputs and evidence artifacts.
+- `guardian_web/README.md` — integrated web interface, core, server and CLI details.
+
+### `docs/`
+
+The `docs/` directory contains project documentation and reference material:
+
+- `dataset_registry.json` — dataset metadata and registry information.
+- `guardian-architecture.mmd` — Mermaid source for the Guardian architecture diagram.
+
+### `integration-tests/`
+
+The `integration-tests/` directory contains cross-workstream integration checks, offline/smoke and verifier reliability tests, and saved benchmark or regression evidence. These artifacts help validate integrated behavior and preserve reproducibility evidence; they are not all necessarily invoked by the ordinary component unit-test commands above.
+
+
 ---
 
 Guardian is an offline-first Linux security demonstrator. The deployment provides a local interface and optional SSH access while keeping the core analysis workflows local.
