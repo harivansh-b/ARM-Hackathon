@@ -110,17 +110,28 @@ Guardian can be deployed using the Docker configuration under `deploy/`.
 
 ### Requirements
 
+- Git and **Git LFS** installed (Git LFS is required for large model/data assets)
 - Docker with Docker Compose support
 - ARM64 Linux environment or ARM64 Docker environment
 - Sufficient disk space for the image and local model assets
 
 ### Install
 
+To avoid Git LFS files downloading automatically during the clone, clone first with LFS smudge disabled, then pull the LFS files separately:
+
 ```bash
-git clone <repository-url>
+# Clone without downloading Git LFS objects during checkout
+GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/harivansh-b/ARM-Hackathon.git
 cd ARM-Hackathon
+
+# Download Git LFS objects separately (approximately 1.1 GB of download)
+git lfs pull
+
+# Run the Docker setup
 ./deploy/setup.sh
 ```
+
+If Git LFS is installed but not initialized for your account, run `git lfs install` first. Install Git LFS before cloning if it is not already available on your system.
 
 The setup script prompts for deployment settings, builds the ARM64 image and starts the container. The webapp port defaults to `8080`; optional SSH access uses a host port defaulting to `2222` and a locally configured password.
 
