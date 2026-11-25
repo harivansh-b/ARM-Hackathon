@@ -91,9 +91,6 @@ python3 -m unittest discover -s person-c/tests -v
 
 ## Dataset integration and benchmark results
 
-Dataset roles, provenance requirements, evaluation gates and benchmark adapters are tracked in:
-
-- [Dataset integration plan](docs/DATASET_INTEGRATION_PLAN.md)
 - [Dataset registry](docs/dataset_registry.json)
 
 The SMS pipeline trains from the public SMS/phishing corpus plus the reviewed multilingual starter set when the local model artifact is first created. Indian hard negatives remain evaluation-only.
