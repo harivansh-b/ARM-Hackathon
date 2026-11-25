@@ -19,9 +19,17 @@ if [[ "${GUARDIAN_SSH_ENABLED:-0}" == "1" ]]; then
     printf 'guardian:%s\n' "$GUARDIAN_PASSWORD" | chpasswd
     unset GUARDIAN_PASSWORD
 
-    mkdir -p /run/sshd
-    ssh-keygen -A
+    mkdir -p /run/sshd /var/lib/guardian-ssh
 
+    for key_type in rsa ecdsa ed25519; do
+        key_file="/var/lib/guardian-ssh/ssh_host_${key_type}_key"
+
+        if [ ! -f "$key_file" ]; then
+            ssh-keygen -t "$key_type" -f "$key_file" -N ""
+        fi
+    done
+
+    chmod 600 /var/lib/guardian-ssh/ssh_host_*_key
     cat > /etc/ssh/sshd_config.d/00-guardian.conf <<'SSHCONF'
 PermitRootLogin no
 PasswordAuthentication yes

@@ -167,10 +167,15 @@ services:
       - "127.0.0.1:${GUARDIAN_SSH_PORT:-2222}:22"
     secrets:
       - guardian_ssh_password
+    volumes:
+      - guardian_ssh_host_keys:/var/lib/guardian-ssh
 
 secrets:
   guardian_ssh_password:
     file: ./secrets/guardian_ssh_password
+
+volumes:
+  guardian_ssh_host_keys:
 EOF
 
     COMPOSE_FILES+=(-f compose.ssh.yaml)

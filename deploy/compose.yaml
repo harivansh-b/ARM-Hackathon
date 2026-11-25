@@ -18,3 +18,5 @@ services:
 
 volumes:
   guardian_reports:
+  guardian_ssh_host_keys:
+
